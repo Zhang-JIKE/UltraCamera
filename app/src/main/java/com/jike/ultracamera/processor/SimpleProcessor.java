@@ -23,16 +23,6 @@ public class SimpleProcessor extends BaseProcessor {
     }
 
     @Override
-    protected void onAlgorithmStarted() {
-
-    }
-
-    @Override
-    protected void onAlgorithmCompleted() {
-
-    }
-
-    @Override
     public boolean isNeedShutterIndicator() {
         return false;
     }

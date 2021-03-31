@@ -22,16 +22,6 @@ public class NightProcessor extends BaseProcessor{
     }
 
     @Override
-    public void onAlgorithmStarted() {
-
-    }
-
-    @Override
-    public void onAlgorithmCompleted() {
-
-    }
-
-    @Override
     public boolean isNeedShutterIndicator() {
         return true;
     }

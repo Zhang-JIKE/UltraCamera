@@ -37,7 +37,7 @@ import com.jike.ultracamera.cameradata.CamSetting;
 import com.jike.ultracamera.cameradata.CameraParameter;
 import com.jike.ultracamera.cameradata.CameraResolution;
 import com.jike.ultracamera.imagereader.ImageReaderHelper;
-import com.jike.ultracamera.interfaces.CaptureListenerHelper;
+import com.jike.ultracamera.helper.CaptureListenerHelper;
 
 
 import java.util.ArrayList;
@@ -561,7 +561,7 @@ public final class Camera2Controller{
             }
 
             if(imageReaderHelper.getProcessor().isNeedShutterIndicator()){
-                CaptureListenerHelper.getListener().onCaptureStarted(indicatorDuration);
+                CaptureListenerHelper.getListener().onCaptureStarted(indicatorDuration, true);
             }
         } catch (CameraAccessException e) {
             e.printStackTrace();

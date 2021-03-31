@@ -15,7 +15,7 @@ import android.view.animation.OvershootInterpolator;
 import com.daily.flexui.util.DisplayUtils;
 import com.daily.flexui.view.abstractview.BaseView;
 import com.jike.ultracamera.R;
-import com.jike.ultracamera.interfaces.CaptureListenerHelper;
+import com.jike.ultracamera.helper.CaptureListenerHelper;
 
 public class ShutterView extends BaseView {
 
@@ -98,12 +98,6 @@ public class ShutterView extends BaseView {
                 ringPaint.setAlpha(0);
                 buttonPaint.setAlpha(100);
                 invalidate();
-            }
-        });
-        captureAnim.addListener(new AnimatorListenerAdapter() {
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                CaptureListenerHelper.getListener().onCaptureFinished();
             }
         });
         captureAnim.start();

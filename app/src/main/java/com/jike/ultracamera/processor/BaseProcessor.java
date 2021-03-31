@@ -13,7 +13,7 @@ import androidx.annotation.NonNull;
 import com.jike.ultracamera.helper.BitmapHelper;
 import com.jike.ultracamera.helper.ImageToByteArrayHelper;
 import com.jike.ultracamera.image.YuvImage;
-import com.jike.ultracamera.interfaces.CaptureListenerHelper;
+import com.jike.ultracamera.helper.CaptureListenerHelper;
 import com.jike.ultracamera.utils.Camera2Utils;
 
 import java.io.File;
@@ -29,23 +29,21 @@ import java.util.concurrent.TimeUnit;
 public abstract class BaseProcessor {
 
     private static final int MSG_ON_ALG_STARTED = 0x0000010;
-    private static final int MSG_ON_ALG_COMPLETED = 0x0000011;
-    private static final int MSG_ON_IMAGE_TAKEN = 0x0000012;
-    private static final int MSG_ON_IMAGE_ADDED = 0x0000013;
+    private static final int MSG_ON_ALL_FINISHED = 0x0000011;
+    private static final int MSG_ON_CAP_FINISHED = 0x0000012;
+
+    private static final int MSG_ON_IMAGE_TAKEN = 0x0000013;
+    private static final int MSG_ON_IMAGE_ADDED = 0x0000014;
 
     private Handler handler = new Handler(){
         @Override
         public void handleMessage(@NonNull Message msg) {
             if(msg.what == MSG_ON_ALG_STARTED){
-                onAlgorithmStarted();
                 if(isNeedShutterIndicator()){
-                    CaptureListenerHelper.getListener().onAlgorithmStarted();
+                    CaptureListenerHelper.getListener().onAlgorithmStarted(isNeedShutterIndicator());
                 }
-            }else if(msg.what == MSG_ON_ALG_COMPLETED){
-                onAlgorithmCompleted();
-                if(isNeedShutterIndicator()){
-                    CaptureListenerHelper.getListener().onAlgorithmFinished();
-                }
+            }else if(msg.what == MSG_ON_ALL_FINISHED){
+                CaptureListenerHelper.getListener().onAllFinished(isNeedShutterIndicator());
             }else if(msg.what == MSG_ON_IMAGE_TAKEN){
                 String path = (String) msg.obj;
                 onImageTaken(path,finishedFrameCount+1, frameCount);
@@ -53,14 +51,14 @@ public abstract class BaseProcessor {
 
                 finishedFrameCount++;
                 if(finishedFrameCount == frameCount){
-                    if(isNeedShutterIndicator()){
-                        CaptureListenerHelper.getListener().onAlgorithmFinished();
-                    }
+                    CaptureListenerHelper.getListener().onAllFinished(isNeedShutterIndicator());
                     finishedFrameCount = 0;
                 }
 
             }else if(msg.what == MSG_ON_IMAGE_ADDED){
                 onFrameAdded(frameData);
+            }else if(msg.what == MSG_ON_CAP_FINISHED){
+                CaptureListenerHelper.getListener().onCaptureFinished(isNeedShutterIndicator());
             }
         }
     };
@@ -72,7 +70,7 @@ public abstract class BaseProcessor {
 
 
     private int frameCount = 8;
-    private int curFrame = 0;
+    private volatile int curFrame = 0;
 
     private volatile byte[] frameData;
     private volatile int finishedFrameCount = 0;
@@ -101,13 +99,22 @@ public abstract class BaseProcessor {
         }
 
         curFrame++;
-        if(curFrame == frameCount) curFrame = 1;
+        if(curFrame == frameCount) curFrame = 0;
     }
 
-    public void takePicture(final Image image){
+    public synchronized void takePicture(final Image image){
         Thread takeThread = new Thread(){
             @Override
             public void run() {
+
+                curFrame++;
+                if(curFrame == frameCount){
+                    curFrame = 0;
+                    Message message = Message.obtain();
+                    message.what = MSG_ON_CAP_FINISHED;
+                    handler.sendMessage(message);
+                }
+
                 int format = image.getFormat();
                 String path = null;
 
@@ -192,7 +199,7 @@ public abstract class BaseProcessor {
                     processAlgorithm();
 
                     Message message2 = Message.obtain();
-                    message2.what = MSG_ON_ALG_COMPLETED;
+                    message2.what = MSG_ON_ALL_FINISHED;
                     handler.sendMessage(message2);
 
 
@@ -208,10 +215,6 @@ public abstract class BaseProcessor {
     protected abstract void onImageTaken(String path, int idx, int total);
 
     protected abstract void processAlgorithm();
-
-    protected abstract void onAlgorithmStarted();
-
-    protected abstract void onAlgorithmCompleted();
 
     //是否需要指示器
     public boolean isNeedShutterIndicator(){

@@ -22,16 +22,6 @@ public class HDRProcessor extends BaseProcessor{
     }
 
     @Override
-    protected void onAlgorithmStarted() {
-
-    }
-
-    @Override
-    protected void onAlgorithmCompleted() {
-
-    }
-
-    @Override
     public boolean isOneShotMode() {
         return false;
     }

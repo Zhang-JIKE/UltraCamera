@@ -4,7 +4,7 @@ import android.content.Intent;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
-import android.media.MediaPlayer;
+import android.media.MediaActionSound;
 import android.os.Bundle;
 import android.view.HapticFeedbackConstants;
 import android.view.LayoutInflater;
@@ -22,7 +22,7 @@ import com.jike.ultracamera.camera2.Camera2Listener;
 import com.jike.ultracamera.cameradata.CamMode;
 import com.jike.ultracamera.cameradata.CamSetting;
 import com.jike.ultracamera.interfaces.CameraTouchListener;
-import com.jike.ultracamera.interfaces.CaptureListenerHelper;
+import com.jike.ultracamera.helper.CaptureListenerHelper;
 import com.jike.ultracamera.interfaces.OnHandFocusListener;
 import com.jike.ultracamera.interfaces.OnImageDetectedListener;
 import com.jike.ultracamera.interfaces.SurfaceTextureListenerAdapter;
@@ -57,6 +57,7 @@ public class CameraFragment extends Fragment implements View.OnClickListener{
     private TextView tvScaler,tips;
 
 
+
     private final SurfaceTextureListenerAdapter textureListenerAdapter = new SurfaceTextureListenerAdapter() {
         @Override
         public void onSurfaceTextureAvailable(SurfaceTexture texture, int width, int height) {
@@ -82,6 +83,7 @@ public class CameraFragment extends Fragment implements View.OnClickListener{
     @Override
     public void onResume() {
         super.onResume();
+
         if (cameraView.isAvailable()) {
             openCamera();
         } else {
@@ -256,9 +258,6 @@ public class CameraFragment extends Fragment implements View.OnClickListener{
         } else if(id == shutterView.getId()){
             if (shutterView.isEnabled) {
                 v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);
-                MediaPlayer player = MediaPlayer.create(getContext(), R.raw.plugin_capture_tick);
-                player.start();
-
                 cameraView.getCamera2Controller().takePicture();
             }
         }
@@ -294,6 +293,7 @@ public class CameraFragment extends Fragment implements View.OnClickListener{
             @Override
             public void onHandFocus(Point point) {
                 cameraView.getCamera2Controller().setFocus(point);
+
             }
 
             @Override
