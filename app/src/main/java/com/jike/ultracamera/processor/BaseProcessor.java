@@ -2,14 +2,19 @@ package com.jike.ultracamera.processor;
 
 import android.graphics.Bitmap;
 import android.graphics.ImageFormat;
+import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.CaptureResult;
+import android.hardware.camera2.DngCreator;
 import android.media.Image;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 
 
+import com.jike.ultracamera.camera2.Camera2Controller;
 import com.jike.ultracamera.helper.BitmapHelper;
 import com.jike.ultracamera.helper.ImageToByteArrayHelper;
 import com.jike.ultracamera.image.YuvImage;
@@ -54,11 +59,8 @@ public abstract class BaseProcessor {
                     CaptureListenerHelper.getListener().onAllFinished(isNeedShutterIndicator());
                     finishedFrameCount = 0;
                 }
-
             }else if(msg.what == MSG_ON_IMAGE_ADDED){
                 onFrameAdded(frameData);
-            }else if(msg.what == MSG_ON_CAP_FINISHED){
-                CaptureListenerHelper.getListener().onCaptureFinished(isNeedShutterIndicator());
             }
         }
     };
@@ -67,7 +69,6 @@ public abstract class BaseProcessor {
     private LinkedBlockingQueue<Runnable> runnableQueue;
 
     private Image[] images;
-
 
     private int frameCount = 8;
     private volatile int curFrame = 0;
@@ -102,11 +103,10 @@ public abstract class BaseProcessor {
         if(curFrame == frameCount) curFrame = 0;
     }
 
-    public synchronized void takePicture(final Image image){
+    public void takePicture(final Image image){
         Thread takeThread = new Thread(){
             @Override
             public void run() {
-
                 curFrame++;
                 if(curFrame == frameCount){
                     curFrame = 0;
@@ -122,7 +122,10 @@ public abstract class BaseProcessor {
                     path = saveYuv(image);
                 }else if(format == ImageFormat.JPEG) {
                     path = saveJpeg(image);
+                }else if(format == ImageFormat.RAW_SENSOR) {
+                    path = saveRaw(image);
                 }
+
                 image.close();
 
                 Message message = Message.obtain();
@@ -263,20 +266,28 @@ public abstract class BaseProcessor {
         }
         return path;
     }
-    /*private void saveRaw(Image image){
-        DngCreator dngCreator = new DngCreator(characteristics, captureResult);
-        FileOutputStream output = null;
-        try {
-            SimpleDateFormat sTimeFormat=new SimpleDateFormat("yyyy-MM-dd-hh-mm-ss-SS");
-            String date = sTimeFormat.format(new Date());
 
-            File file = new File("/sdcard/"+date+".dng");
-            output = new FileOutputStream(file);
-            dngCreator.writeImage(output, mImage);
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            mImage.close();
+    private String saveRaw(Image image){
+        while (true) {
+            if(Camera2Controller.getInstance().getCaptureResult() != null) {
+                DngCreator dngCreator = new DngCreator(Camera2Controller.getInstance().getCameraCharacteristics(),
+                        Camera2Controller.getInstance().getCaptureResult());
+                FileOutputStream output = null;
+                SimpleDateFormat sTimeFormat = new SimpleDateFormat("yyyy-MM-dd-hh-mm-ss-SS");
+                String date = sTimeFormat.format(new Date());
+                String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getAbsolutePath() + "/Camera" + "/CPro-" + "RAW" + date + ".dng";
+                try {
+                    File file = new File(path);
+                    output = new FileOutputStream(file);
+                    dngCreator.writeImage(output, image);
+                    Camera2Utils.galleryAddPic(path);
+                    image.close();
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                return path;
+            }
         }
-    }*/
+    }
 }

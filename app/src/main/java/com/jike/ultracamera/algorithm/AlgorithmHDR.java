@@ -11,7 +11,7 @@ public class AlgorithmHDR {
     public static synchronized native String HDRConvertFromJpeg(int[] frame, int[] frame_len, int nFrames, int sx,
                                                                 int sy);
 
-    public static synchronized native String HDRAddYUVFrames(int[] frame, int nFrames, int sx, int sy);
+    public static synchronized native String HDRAddYUVFrames(byte[] frame, int nFrames, int sx, int sy);
 
     public static synchronized native String HDRPreview(int nFrames, int sx, int sy, int[] pview, int expoPref,
                                                         int colorPref, int ctrstPref, int microPref, int noSegmPref, int noisePref, boolean mirrored);
@@ -29,6 +29,6 @@ public class AlgorithmHDR {
 
     static
     {
-        System.loadLibrary("almashot-hdr");
+        System.loadLibrary("native-lib");
     }
 }

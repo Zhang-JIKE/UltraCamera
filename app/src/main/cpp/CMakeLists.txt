@@ -12,8 +12,6 @@ cmake_minimum_required(VERSION 3.4.1)
 #add_library( lib_opencv SHARED IMPORTED )
 #set_target_properties(lib_opencv PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/../jniLibs/${ANDROID_ABI}/libopencv_java4.so)
 
-#add_library(libjpg SHARED IMPORTED)
-#set_target_properties(libjpg PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/../jniLibs/${ANDROID_ABI}/lib_jpeg.so)
 link_directories(../jniLibs/${ANDROID_ABI})
 
 # Creates and names a library, sets it as either STATIC
@@ -55,8 +53,6 @@ target_link_libraries( # Specifies the target library.
 #       lib_opencv
         turbojpeg
         jpeg
-
-
         jnigraphics
         # Links the target library to the log library
         # included in the NDK.

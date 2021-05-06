@@ -18,6 +18,10 @@
         android:requestLegacyExternalStorage="true"
         android:testOnly="false">
 
+        <meta-data
+            android:name="android.vivo_nightmode_support"
+            android:value="true" />
+
         <activity android:name="com.jike.ultracamera.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

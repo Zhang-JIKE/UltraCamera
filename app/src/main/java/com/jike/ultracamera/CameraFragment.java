@@ -1,10 +1,14 @@
 package com.jike.ultracamera;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
-import android.media.MediaActionSound;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.view.HapticFeedbackConstants;
 import android.view.LayoutInflater;
@@ -18,7 +22,7 @@ import androidx.fragment.app.Fragment;
 
 import com.daily.flexui.util.AppContextUtils;
 import com.daily.flexui.view.CircleImageView;
-import com.jike.ultracamera.camera2.Camera2Listener;
+import com.jike.ultracamera.camera2.Camera2Controller;
 import com.jike.ultracamera.cameradata.CamMode;
 import com.jike.ultracamera.cameradata.CamSetting;
 import com.jike.ultracamera.interfaces.CameraTouchListener;
@@ -56,7 +60,7 @@ public class CameraFragment extends Fragment implements View.OnClickListener{
     private TextView tvInfo;
     private TextView tvScaler,tips;
 
-
+   private SensorManager sensorManager;
 
     private final SurfaceTextureListenerAdapter textureListenerAdapter = new SurfaceTextureListenerAdapter() {
         @Override
@@ -82,7 +86,41 @@ public class CameraFragment extends Fragment implements View.OnClickListener{
 
     @Override
     public void onResume() {
-        super.onResume();
+        super.onResume();2
+
+        sensorManager = (SensorManager)AppContextUtils.getAppActivity().getSystemService(Context.SENSOR_SERVICE);
+        Sensor sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        sensorManager.registerListener(new SensorEventListener() {
+            @Override
+            public void onSensorChanged(SensorEvent event) {
+                float x = event.values[0];
+                float y = event.values[1];
+                float z = event.values[2];
+
+                if(x >= -1 && x < 1){
+                    if(y > 0){
+                        //0
+                        Camera2Controller.getInstance().setRotation(90);
+                    }
+                    if(y < 0){
+                        //180
+                        Camera2Controller.getInstance().setRotation(90 + 180);
+                    }
+                }else if(x > 6){
+                    //-90
+                    Camera2Controller.getInstance().setRotation(90 - 90);
+                }else if(x < -6){
+                    //90
+                    Camera2Controller.getInstance().setRotation(90 + 90);
+                }
+            }
+
+            @Override
+            public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+            }
+        }, sensor, sensorManager.SENSOR_DELAY_NORMAL);
+
 
         if (cameraView.isAvailable()) {
             openCamera();
@@ -90,7 +128,7 @@ public class CameraFragment extends Fragment implements View.OnClickListener{
             cameraView.setSurfaceTextureListener(textureListenerAdapter);
         }
         CaptureListenerHelper.bindView(shutterView,tips);
-        //cameraView.c2helper.setScaleTime(cameraView.mScaleTime);
+
         DecimalFormat mFormat = new DecimalFormat(".0");
         String formatNum = mFormat.format(cameraView.mScaleTime);
         if(formatNum.contains(".0")){
@@ -118,14 +156,12 @@ public class CameraFragment extends Fragment implements View.OnClickListener{
             @Override
             public void onClick(View v) {
                 isFaceingFront = !isFaceingFront;
-
                 if(isFaceingFront) {
-                    camIdx = 1;
+                    Camera2Controller.getInstance().cameraIdIndex = 1;
+                } else {
+                    Camera2Controller.getInstance().cameraIdIndex = 0;
                 }
-                else {
-                    camIdx = 0;
-                }
-                //cameraView.closeCamera();
+                Camera2Controller.getInstance().closeCamera();
                 if (cameraView.isAvailable()) {
                     openCamera();
                 } else {
@@ -265,35 +301,18 @@ public class CameraFragment extends Fragment implements View.OnClickListener{
 
 
     private void openCamera(){
-        cameraView.getCamera2Controller().openCamera(camIdx);
+        cameraView.getCamera2Controller().openCamera();
         cameraView.setControllerView(textureLayout);
         cameraView.setUpTexturePadding(textureLayout);
         cameraView.getCamera2Controller().initCameraController(
                 cameraView.getCamera2Controller().mCameraResolution.getPicSize().getWidth(),
                 cameraView.getCamera2Controller().mCameraResolution.getPicSize().getHeight(),
-                cameraView.getSurfaceTexture(),
-                new Camera2Listener() {
-                    @Override
-                    public void onCameraOpened(int w, int h, int camIdx) {
-
-                    }
-
-                    @Override
-                    public void onCameraClosed(int camIdx) {
-
-                    }
-
-                    @Override
-                    public void onFaceDetected(Rect[] rects) {
-
-                    }
-                });
+                cameraView.getSurfaceTexture());
 
         cameraView.cameraControllerView.setOnHandFocusListener(new OnHandFocusListener() {
             @Override
             public void onHandFocus(Point point) {
                 cameraView.getCamera2Controller().setFocus(point);
-
             }
 
             @Override

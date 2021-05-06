@@ -1,5 +1,6 @@
 package com.jike.ultracamera.helper;
 
+import android.media.ExifInterface;
 import android.media.MediaActionSound;
 import android.util.Log;
 import android.view.View;
@@ -9,6 +10,8 @@ import android.widget.Toast;
 import com.daily.flexui.util.AppContextUtils;
 import com.jike.ultracamera.interfaces.CaptureListener;
 import com.jike.ultracamera.view.ShutterView;
+
+import java.io.IOException;
 
 public class CaptureListenerHelper {
 
@@ -75,13 +78,14 @@ public class CaptureListenerHelper {
                             tvTips.setVisibility(View.GONE);
                         }
                     }
+                    Toast.makeText(AppContextUtils.getAppContext(), "拍照完成", Toast.LENGTH_SHORT).show();
                 }
 
                 @Override
                 public void onImageTaken(String path, int idx, int total) {
-                    if(idx == total) {
+                   /* if(idx == total) {
                         Toast.makeText(AppContextUtils.getAppContext(), "拍照完成", Toast.LENGTH_SHORT).show();
-                    }
+                    }*/
                 }
             };
         }
