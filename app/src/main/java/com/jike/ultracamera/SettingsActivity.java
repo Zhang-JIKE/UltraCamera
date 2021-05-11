@@ -152,7 +152,7 @@ public class SettingsActivity extends SlideActivity {
         swtYuv.setOnSwitchListener(new SwitchButton.OnSwitchChangedListner() {
             @Override
             public void onSwitchChanged(boolean isChecked) {
-                CamSetting.setIsYuv(isChecked);
+                CamSetting.setIsRaw(isChecked);
             }
         });
 
@@ -210,7 +210,7 @@ public class SettingsActivity extends SlideActivity {
         swtLine.setChecked(CamSetting.isLineOpend);
         swtFaceDetect.setChecked(CamSetting.isFaceDetectOpend);
         swtSceneDetect.setChecked(CamSetting.isAiSceneOpend);
-        swtYuv.setChecked(CamSetting.isYuv);
+        swtYuv.setChecked(CamSetting.isRaw);
     }
 
 

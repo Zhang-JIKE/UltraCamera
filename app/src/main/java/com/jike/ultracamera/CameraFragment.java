@@ -39,9 +39,6 @@ import java.text.DecimalFormat;
 
 public class CameraFragment extends Fragment implements View.OnClickListener{
 
-    final int[] pos = {6};
-    private int camIdx = 0;
-    private boolean isFaceingFront = false;
     public Camera2View cameraView;
 
     private ImageView ivFlash;
@@ -86,7 +83,7 @@ public class CameraFragment extends Fragment implements View.OnClickListener{
 
     @Override
     public void onResume() {
-        super.onResume();2
+        super.onResume();
 
         sensorManager = (SensorManager)AppContextUtils.getAppActivity().getSystemService(Context.SENSOR_SERVICE);
         Sensor sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -155,18 +152,10 @@ public class CameraFragment extends Fragment implements View.OnClickListener{
         ivFacingSwitch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                isFaceingFront = !isFaceingFront;
-                if(isFaceingFront) {
-                    Camera2Controller.getInstance().cameraIdIndex = 1;
-                } else {
-                    Camera2Controller.getInstance().cameraIdIndex = 0;
-                }
+                Camera2Controller.getInstance().isFacingFront = !Camera2Controller.getInstance().isFacingFront;
+
                 Camera2Controller.getInstance().closeCamera();
-                if (cameraView.isAvailable()) {
-                    openCamera();
-                } else {
-                    cameraView.setSurfaceTextureListener(textureListenerAdapter);
-                }
+                openCamera();
             }
         });
 

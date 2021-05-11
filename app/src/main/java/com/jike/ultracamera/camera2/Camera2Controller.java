@@ -19,7 +19,7 @@ import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.Face;
 import android.hardware.camera2.params.MeteringRectangle;
-import android.hardware.camera2.params.RggbChannelVector;
+import android.hardware.camera2.params.OutputConfiguration;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.MediaRecorder;
 import android.os.Handler;
@@ -27,7 +27,6 @@ import android.os.HandlerThread;
 import android.util.Log;
 import android.util.Range;
 import android.view.Surface;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
@@ -62,7 +61,13 @@ public final class Camera2Controller{
     }
 
     private String[] mCameraIdList;
-    public int cameraIdIndex = 0;
+    private String[] mPhyCameraIdList;
+    public int curPhyCameraIdx = 0;
+
+    public int curCameraIdx = 0;
+    private int backCameraIdx = 0;
+    private int frontCameraIdx = 0;
+    public boolean isFacingFront = false;
 
     private int viewHeight;
     private int viewWidth;
@@ -209,34 +214,63 @@ public final class Camera2Controller{
     
     private void createCameraPreviewSession() {
         try {
-            texture.setDefaultBufferSize(mCameraResolution.getPicSize().getWidth(), mCameraResolution.getPicSize().getHeight());
+            texture.setDefaultBufferSize(mCameraResolution.getPicSize().getWidth(),
+                    mCameraResolution.getPicSize().getHeight());
+
             surface = new Surface(texture);
 
             imageSaver = new ImageSaver(mCameraResolution.getPicSize().getWidth(),
                     mCameraResolution.getPicSize().getHeight(),
-                    CamSetting.isYuv ? ImageFormat.YUV_420_888 : ImageFormat.RAW_SENSOR);
+                    CamSetting.isRaw ? ImageFormat.RAW_SENSOR : ImageFormat.JPEG);
 
-            mCameraDevice.createCaptureSession(Arrays.asList(surface,
-                    imageSaver.getImageReader().getSurface()),
-                    captureSessionStateListener,
-                    mBackgroundHandler
-            );
+            if(mPhyCameraIdList.length <= 1) {
+                mCameraDevice.createCaptureSession(Arrays.asList(surface,
+                        imageSaver.getImageReader().getSurface()),
+                        captureSessionStateListener,
+                        mBackgroundHandler
+                );
+            }else {
+                OutputConfiguration configuration1 = new OutputConfiguration(surface);
+                configuration1.setPhysicalCameraId(mPhyCameraIdList[curPhyCameraIdx]);
+
+                OutputConfiguration configuration2 = new OutputConfiguration(imageSaver.getImageReader().getSurface());
+                configuration2.setPhysicalCameraId(mPhyCameraIdList[curPhyCameraIdx]);
+
+                mCameraDevice.createCaptureSessionByOutputConfigurations(Arrays.asList(configuration1,
+                        configuration2),
+                        captureSessionStateListener,
+                        mBackgroundHandler
+                );
+            }
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }
     }
 
-    private void initCamera(){
+    private void loadCameraLists(){
         mCameraManager = (CameraManager) AppContextUtils.getAppActivity().getSystemService(Context.CAMERA_SERVICE);
-
         try {
             mCameraIdList = mCameraManager.getCameraIdList();
-            Toast.makeText(AppContextUtils.getAppContext(),"检测到" + mCameraIdList.length + "个摄像头", Toast.LENGTH_SHORT).show();
-            for(String s : mCameraIdList){
-                Log.e("CameraID",""+s);
+
+            for(int i = 0; i < mCameraIdList.length; i++) {
+                mCameraCharacteristics = mCameraManager.getCameraCharacteristics(mCameraIdList[i]);
+                if (mCameraCharacteristics.get(CameraCharacteristics.LENS_FACING) == CameraMetadata.LENS_FACING_FRONT){
+                    frontCameraIdx = i;
+                    break;
+                }
             }
-            String camId = mCameraIdList[cameraIdIndex];
-            mCameraCharacteristics = mCameraManager.getCameraCharacteristics(camId);
+
+            if(isFacingFront) {
+                curCameraIdx = frontCameraIdx;
+            }else {
+                curCameraIdx = backCameraIdx;
+            }
+            mCameraCharacteristics = mCameraManager.getCameraCharacteristics(mCameraIdList[curCameraIdx])6
+            Object[] objects = mCameraCharacteristics.getPhysicalCameraIds().toArray();
+            mPhyCameraIdList = new String[objects.length];
+            for (int i = 0; i < objects.length; i++){
+                mPhyCameraIdList[i] = (String) objects[i];
+            }
 
         } catch (CameraAccessException e) {
             e.printStackTrace();
@@ -244,9 +278,9 @@ public final class Camera2Controller{
 
     }
     
-    private void initCameraParams(){
+    private void loadCameraSize(){
         StreamConfigurationMap map = mCameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
-        mCameraResolution.setPicSizes(Arrays.asList(map.getOutputSizes(CamSetting.isYuv ? ImageFormat.YUV_420_888 : ImageFormat.RAW_SENSOR)));
+        mCameraResolution.setPicSizes(Arrays.asList(map.getOutputSizes(CamSetting.isRaw ? ImageFormat.RAW_SENSOR : ImageFormat.JPEG)));
         mCameraResolution.setVideoSizes(Arrays.asList(map.getOutputSizes(MediaRecorder.class)));
         CamRates.rawFpsRanges = mCameraCharacteristics.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES);
         Boolean available = mCameraCharacteristics.get(CameraCharacteristics.FLASH_INFO_AVAILABLE);
@@ -539,12 +573,10 @@ public final class Camera2Controller{
             return;
         }
 
-        initCamera();
-        initCameraParams();
-
-        CameraManager manager = (CameraManager) AppContextUtils.getAppActivity().getSystemService(Context.CAMERA_SERVICE);
         try {
-            manager.openCamera(mCameraIdList[cameraIdIndex], cameraDeviceStateListener, mBackgroundHandler);
+            loadCameraLists();
+            loadCameraSize();
+            mCameraManager.openCamera(mCameraIdList[curCameraIdx], cameraDeviceStateListener, mBackgroundHandler);
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }

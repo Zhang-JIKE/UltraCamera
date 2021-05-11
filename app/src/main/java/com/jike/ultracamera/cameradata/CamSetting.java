@@ -15,7 +15,7 @@ public class CamSetting {
     public static final String IS_LINE_OPENED ="IN_LINE_OPENED";
     public static final String IS_FACE_DETECT_OPENED ="IN_FACE_DETECT_OPENED";
     public static final String IS_AI_SCENE_OPENED ="IS_AI_SCENE_OPENED";
-    public static final String IS_YUV ="IS_YUV";
+    public static final String IS_RAW ="IS_RAW";
     public static final String IS_ACCEL = "IS_ACCEL";
     public static final String IS_DENOISE_OPENED = "IS_DENOISE_OPENED";
     public static final String IS_NIGHT_OPENED = "IS_NIGHT_OPENED";
@@ -28,7 +28,7 @@ public class CamSetting {
     public static boolean isLineOpend = true;
     public static boolean isFaceDetectOpend = false;
     public static boolean isAiSceneOpend = false;
-    public static boolean isYuv = false;
+    public static boolean isRaw = false;
     public static boolean mFlashSupported = false;
     public static boolean isDenoiseOpened = false;
     public static boolean isNightOpened = false;
@@ -42,7 +42,7 @@ public class CamSetting {
         isLineOpend = mSpf.getBoolean(IS_LINE_OPENED, true);
         isFaceDetectOpend = mSpf.getBoolean(IS_FACE_DETECT_OPENED, false);
         isAiSceneOpend = mSpf.getBoolean(IS_AI_SCENE_OPENED, false);
-        isYuv = mSpf.getBoolean(IS_YUV, false);
+        isRaw = mSpf.getBoolean(IS_RAW, false);
         isAccel = mSpf.getBoolean(IS_ACCEL, false);
 
         isDenoiseOpened = mSpf.getBoolean(IS_DENOISE_OPENED, false);
@@ -92,9 +92,9 @@ public class CamSetting {
         }
     }
 
-    public static void setIsYuv(boolean isYuv){
-        CamSetting.isYuv = isYuv;
-        saveSettings(IS_YUV, isYuv);
+    public static void setIsRaw(boolean isRaw){
+        CamSetting.isRaw = isRaw;
+        saveSettings(IS_RAW, isRaw);
     }
 
     public static void setIsAccel(boolean isAccel){
