@@ -12,10 +12,9 @@ import androidx.annotation.Nullable;
 import com.daily.flexui.activity.SlideActivity;
 import com.daily.flexui.util.AppContextUtils;
 import com.daily.flexui.view.SwitchButton;
+import com.jike.ultracamera.camera2.UCamera;
 import com.jike.ultracamera.cameradata.CamEncode;
-import com.jike.ultracamera.cameradata.CamRates;
 import com.jike.ultracamera.cameradata.CamSetting;
-import com.jike.ultracamera.cameradata.CameraResolution;
 import com.jike.ultracamera.dialog.OnSelectItemListener;
 import com.jike.ultracamera.dialog.SettingPicSizeDialog;
 import com.jike.ultracamera.dialog.SettingVideoEncodeDialog;
@@ -35,7 +34,7 @@ public class SettingsActivity extends SlideActivity {
     private SettingVideoRatesDialog sVideoRatesDlg;
     private SettingVideoEncodeDialog sVideoEncodeDlg;
 
-    private SettingView swtClickSounds,swtLocation,swtMirror,swtLine,swtFaceDetect,swtSceneDetect,swtYuv;
+    private SettingView swtClickSounds,swtLocation,swtMirror,swtLine,swtFaceDetect,swtSceneDetect;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -54,8 +53,9 @@ public class SettingsActivity extends SlideActivity {
         sSizeDlg.setOnSelectItemListener(new OnSelectItemListener() {
             @Override
             public void OnSelectItem(int pos) {
-                CameraResolution.getInstance().setPicIndex(pos);
-                tvPicSize.setText(""+ CameraResolution.getInstance().getPicSize().getWidth()+"x"+ CameraResolution.getInstance().getPicSize().getHeight());
+                ;
+                tvPicSize.setText(""+ UCamera.Resolution.picSizeList[pos].getWidth()
+                        +"x"+ UCamera.Resolution.picSizeList[pos].getHeight());
 
             }
         });
@@ -63,18 +63,19 @@ public class SettingsActivity extends SlideActivity {
         sVideoSizeDlg.setOnSelectItemListener(new OnSelectItemListener() {
             @Override
             public void OnSelectItem(int pos) {
-                CameraResolution.getInstance().setVideoIndex(pos);
-                tvVideoSize.setText(""+ CameraResolution.getInstance().getRearVideoSize().getWidth()+"x"+ CameraResolution.getInstance().getRearVideoSize().getHeight());
+                tvVideoSize.setText(
+                        UCamera.Resolution.videoSizeList[pos].getWidth()
+                        +"x"+ UCamera.Resolution.videoSizeList[pos].getHeight());
             }
         });
 
-        sVideoRatesDlg.setOnSelectItemListener(new OnSelectItemListener() {
+        /*sVideoRatesDlg.setOnSelectItemListener(new OnSelectItemListener() {
             @Override
             public void OnSelectItem(int pos) {
                 CamRates.setSelectPos(pos);
                 tvVideoRates.setText(""+ CamRates.getFpsRanges().get(CamRates.selectPos).getUpper()+"FPS");
             }
-        });
+        });*/
 
         sVideoEncodeDlg.setOnSelectItemListener(new OnSelectItemListener() {
             @Override
@@ -101,7 +102,6 @@ public class SettingsActivity extends SlideActivity {
         swtLine = findViewById(R.id.switch_line);
         swtFaceDetect = findViewById(R.id.switch_face_detect);
         swtSceneDetect = findViewById(R.id.switch_scene_detect);
-        swtYuv = findViewById(R.id.switch_isyuv);
 
         swtClickSounds.setOnSwitchListener(new SwitchButton.OnSwitchChangedListner() {
             @Override
@@ -149,12 +149,6 @@ public class SettingsActivity extends SlideActivity {
             }
         });
 
-        swtYuv.setOnSwitchListener(new SwitchButton.OnSwitchChangedListner() {
-            @Override
-            public void onSwitchChanged(boolean isChecked) {
-                CamSetting.setIsRaw(isChecked);
-            }
-        });
 
         itemLab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -198,9 +192,9 @@ public class SettingsActivity extends SlideActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        tvPicSize.setText(""+ CameraResolution.getInstance().getPicSize().getWidth()+"x"+ CameraResolution.getInstance().getPicSize().getHeight());
-//        tvVideoSize.setText(""+ CamSize.getRearVideoSize().getWidth()+"x"+ CamSize.getRearVideoSize().getHeight());
-        tvVideoRates.setText(""+ CamRates.getFpsRanges().get(CamRates.selectPos).getUpper()+"FPS");
+        tvPicSize.setText(""+ UCamera.getPicSize().getWidth()+"x"+ UCamera.getPicSize().getHeight());
+        tvVideoSize.setText(""+ UCamera.getVideoSize().getWidth()+"x"+ UCamera.getVideoSize().getHeight());
+//        tvVideoRates.setText(""+ CamRates.getFpsRanges().get(CamRates.selectPos).getUpper()+"FPS");
         tvVideoEncode.setText("" +CamEncode.encodes[CamEncode.encodePos]);
 
         swtClickSounds.setChecked(CamSetting.isClickSoundsOpened);
@@ -210,7 +204,6 @@ public class SettingsActivity extends SlideActivity {
         swtLine.setChecked(CamSetting.isLineOpend);
         swtFaceDetect.setChecked(CamSetting.isFaceDetectOpend);
         swtSceneDetect.setChecked(CamSetting.isAiSceneOpend);
-        swtYuv.setChecked(CamSetting.isRaw);
     }
 
 

@@ -10,7 +10,7 @@ import androidx.annotation.NonNull;
 
 import com.daily.flexui.util.DisplayUtils;
 import com.jike.ultracamera.R;
-import com.jike.ultracamera.cameradata.CameraResolution;
+import com.jike.ultracamera.camera2.UCamera;
 import com.jike.ultracamera.view.CheckView;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
@@ -49,8 +49,8 @@ public class SettingVideoSizeDialog extends BottomSheetDialog {
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         params.setMargins(DisplayUtils.dp2px(26), DisplayUtils.dp2px(14), DisplayUtils.dp2px(26), DisplayUtils.dp2px(14));
 
-        for(int i = 0; i < CameraResolution.getInstance().getPicSizes().size(); i++){
-            Size size = CameraResolution.getInstance().getPicSizes().get(i);
+        for(int i = 0; i < UCamera.Resolution.videoSizeList.length; i++){
+            Size size = UCamera.Resolution.videoSizeList[i];
             final CheckView checkView = new CheckView(getContext());
 
             int gcd = gcd(size.getWidth(),size.getHeight());
@@ -64,7 +64,7 @@ public class SettingVideoSizeDialog extends BottomSheetDialog {
                 @Override
                 public void onClick(View v) {
                     checkView.setChecked(true);
-                    CameraResolution.getInstance().videoIndex = finalI;
+                    UCamera.Resolution.videoSizeIndex = finalI;
                     unCheckOthersView();
                     if(onSelectItemListener!=null){
                         onSelectItemListener.OnSelectItem(finalI);
@@ -73,7 +73,7 @@ public class SettingVideoSizeDialog extends BottomSheetDialog {
                 }
             });
 
-            if(i == CameraResolution.getInstance().videoIndex){
+            if(i == UCamera.Resolution.videoSizeIndex){
                 checkView.setChecked(true);
             }
 
@@ -85,7 +85,7 @@ public class SettingVideoSizeDialog extends BottomSheetDialog {
 
     private void unCheckOthersView(){
         for(int i = 0; i < checkViews.size(); i++){
-            if(i != CameraResolution.getInstance().videoIndex){
+            if(i != UCamera.Resolution.videoSizeIndex){
                 checkViews.get(i).setChecked(false);
             }
         }

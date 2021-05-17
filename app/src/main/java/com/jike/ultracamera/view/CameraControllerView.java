@@ -195,11 +195,7 @@ public class CameraControllerView extends View {
         if (0 == mRatioWidth || 0 == mRatioHeight) {
             setMeasuredDimension(width, height);
         } else {
-            if (width < height * mRatioWidth / mRatioHeight) {
-                setMeasuredDimension(width, width * mRatioHeight / mRatioWidth);
-            } else {
-                setMeasuredDimension(height * mRatioWidth / mRatioHeight, height);
-            }
+            setMeasuredDimension(width, width * mRatioHeight / mRatioWidth);
         }
     }
 
@@ -210,9 +206,6 @@ public class CameraControllerView extends View {
     }
 
     public void setAspectRatio(int width, int height) {
-        if (width < 0 || height < 0) {
-            throw new IllegalArgumentException("Size cannot be negative.");
-        }
         mRatioWidth = width;
         mRatioHeight = height;
         requestLayout();

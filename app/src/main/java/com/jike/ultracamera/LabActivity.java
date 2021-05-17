@@ -7,7 +7,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.daily.flexui.util.AppContextUtils;
 import com.daily.flexui.view.SwitchButton;
-import com.jike.ultracamera.cameradata.CamRates;
 import com.jike.ultracamera.cameradata.CamSetting;
 
 
@@ -30,7 +29,7 @@ public class LabActivity extends AppCompatActivity {
         swtForce60Fps.setOnSwitchChangedListner(new SwitchButton.OnSwitchChangedListner() {
             @Override
             public void onSwitchChanged(boolean isChecked) {
-                CamRates.setIsForcedOpen60Fps(isChecked);
+                //CamRates.setIsForcedOpen60Fps(isChecked);
             }
         });
 
@@ -59,7 +58,7 @@ public class LabActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        swtForce60Fps.setChecked(CamRates.isForcedOpen60Fps);
+        //swtForce60Fps.setChecked(CamRates.isForcedOpen60Fps);
         swtAccel.setChecked(CamSetting.isAccel);
         swtDenoise.setChecked(CamSetting.isDenoiseOpened);
         swtNight.setChecked(CamSetting.isNightOpened);

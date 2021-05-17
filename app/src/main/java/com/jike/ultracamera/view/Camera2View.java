@@ -18,7 +18,7 @@ public class Camera2View extends BaseCameraView {
     camera2Controller = Camera2Controller.getInstance();
   }
 
-  public Camera2Controller getCamera2Controller() {
+  public Camera2Controller getController() {
     return camera2Controller;
   }
 }

@@ -15,6 +15,7 @@ import android.widget.FrameLayout;
 import com.daily.flexui.util.AppContextUtils;
 import com.daily.flexui.util.DisplayUtils;
 import com.jike.ultracamera.camera2.Camera2Controller;
+import com.jike.ultracamera.camera2.UCamera;
 import com.jike.ultracamera.interfaces.OnImageDetectedListener;
 
 
@@ -32,15 +33,20 @@ public class BaseCameraView extends TextureView {
 
     public CameraControllerView cameraControllerView;
 
+    public void setCameraControllerView(CameraControllerView cameraControllerView) {
+        this.cameraControllerView = cameraControllerView;
+    }
+
     public void setAspectRatio(int width, int height) {
-        if (width < 0 || height < 0) {
-            throw new IllegalArgumentException("Size cannot be negative.");
-        }
+        Log.e("Ratio","w:"+width+"h:"+height);
         mRatioWidth = width;
         mRatioHeight = height;
-        Log.e("Cam-Ratio","W:"+width+" H:"+height);
         requestLayout();
+
+        cameraControllerView.setAspectRatio(width,height);
+        cameraControllerView.requestLayout();
     }
+
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
@@ -59,15 +65,12 @@ public class BaseCameraView extends TextureView {
 
     public void configureTransform(int viewWidth, int viewHeight) {
 
-        if (null == Camera2Controller.getInstance().getInstance().mCameraResolution.getPicSize() || null == AppContextUtils.getAppActivity()) {
-            return;
-        }
         int rotation = AppContextUtils.getAppActivity().getWindowManager().getDefaultDisplay().getRotation();
         Log.e("Rotation",rotation+"");
         Matrix matrix = new Matrix();
         RectF viewRect = new RectF(0, 0, viewWidth, viewHeight);
         RectF bufferRect;
-        bufferRect = new RectF(0, 0, Camera2Controller.getInstance().mCameraResolution.getPicSize().getHeight(), Camera2Controller.getInstance().mCameraResolution.getPicSize().getWidth());
+        bufferRect = new RectF(0, 0, UCamera.getPicSize().getHeight(), UCamera.getPicSize().getWidth());
 
         float centerX = viewRect.centerX();
         float centerY = viewRect.centerY();
@@ -79,8 +82,8 @@ public class BaseCameraView extends TextureView {
             float viewLongEdge = viewWidth > viewHeight ? viewWidth : viewHeight;
             float viewShortEdge = viewWidth <= viewHeight ? viewWidth : viewHeight;
             float scale = Math.max(
-                    (float) viewShortEdge / Camera2Controller.getInstance().mCameraResolution.getPicSize().getHeight(),
-                    (float) viewLongEdge / Camera2Controller.getInstance().mCameraResolution.getPicSize().getWidth());
+                    (float) viewShortEdge / UCamera.getPicSize().getHeight(),
+                    (float) viewLongEdge / UCamera.getPicSize().getWidth());
             matrix.postScale(scale, scale, centerX, centerY);
 
             matrix.postRotate(90 * (rotation - 2), centerX, centerY);
@@ -91,63 +94,6 @@ public class BaseCameraView extends TextureView {
         }
         setTransform(matrix);
     }
-
-    public void setUpTexturePadding(View parent){
-        Display display = AppContextUtils.getAppActivity().getWindowManager().getDefaultDisplay();
-        int screenW = display.getWidth();
-        int screenH = display.getHeight();
-        Log.e("Screen","W"+screenW+"H"+screenH);
-
-        int width = Camera2Controller.getInstance().mCameraResolution.getPicSize().getHeight();
-        int height = Camera2Controller.getInstance().mCameraResolution.getPicSize().getWidth();
-
-        if(((float) width/(float)height !=(float)3/4 &&(float) width/(float)height !=(float)9/16)) {
-            parent.setPadding(0,0,0,0);
-        } else {
-            parent.setPadding(0, DisplayUtils.dp2px(66),0,0);
-        }
-        setAspectRatio(Camera2Controller.getInstance().mCameraResolution.getPicSize().getHeight(), Camera2Controller.getInstance().mCameraResolution.getPicSize().getWidth());
-    }
-
-    public void setControllerView(ViewGroup parent) {
-        if (cameraControllerView == null) {
-            cameraControllerView = new CameraControllerView(AppContextUtils.getAppContext());
-            FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            params.width = parent.getRight();
-            params.height = (int) (params.width * Camera2Controller.getInstance().mCameraResolution.getPicRatio());
-            cameraControllerView.setLayoutParams(params);
-
-            int width = Camera2Controller.getInstance().mCameraResolution.getPicSize().getHeight();
-            int height = Camera2Controller.getInstance().mCameraResolution.getPicSize().getWidth();
-
-            if(((float) width/(float)height !=(float)3/4 &&(float) width/(float)height !=(float)9/16)) {
-                cameraControllerView.setPad(0);
-            } else {
-                cameraControllerView.setPad(DisplayUtils.dp2px(66));
-            }
-            parent.addView(cameraControllerView);
-
-        } else {
-            parent.removeView(cameraControllerView);
-            cameraControllerView = new CameraControllerView(AppContextUtils.getAppContext());
-            FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            params.width = getWidth();
-            params.height = (int) (getWidth() * Camera2Controller.getInstance().mCameraResolution.getPicRatio());
-            cameraControllerView.setLayoutParams(params);
-
-            int width = Camera2Controller.getInstance().mCameraResolution.getPicSize().getHeight();
-            int height = Camera2Controller.getInstance().mCameraResolution.getPicSize().getWidth();
-
-            if(((float) width/(float)height !=(float)3/4 &&(float) width/(float)height !=(float)9/16)) {
-                cameraControllerView.setPad(0);
-            } else {
-                cameraControllerView.setPad(DisplayUtils.dp2px(66));
-            }
-
-            parent.addView(cameraControllerView);
-        }
-    }
-
 
     public BaseCameraView(Context context) {
         super(context);

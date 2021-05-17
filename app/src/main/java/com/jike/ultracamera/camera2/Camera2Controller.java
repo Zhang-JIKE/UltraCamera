@@ -4,7 +4,6 @@ package com.jike.ultracamera.camera2;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.graphics.ImageFormat;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
@@ -17,15 +16,10 @@ import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
-import android.hardware.camera2.params.Face;
-import android.hardware.camera2.params.MeteringRectangle;
 import android.hardware.camera2.params.OutputConfiguration;
-import android.hardware.camera2.params.StreamConfigurationMap;
-import android.media.MediaRecorder;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Log;
-import android.util.Range;
 import android.view.Surface;
 
 import androidx.annotation.NonNull;
@@ -34,10 +28,8 @@ import androidx.core.content.ContextCompat;
 import com.daily.flexui.util.AppContextUtils;
 import com.jike.ultracamera.cameradata.CamMode;
 import com.jike.ultracamera.cameradata.CamPara;
-import com.jike.ultracamera.cameradata.CamRates;
 import com.jike.ultracamera.cameradata.CamSetting;
 import com.jike.ultracamera.cameradata.CameraParameter;
-import com.jike.ultracamera.cameradata.CameraResolution;
 import com.jike.ultracamera.helper.CaptureListenerHelper;
 
 
@@ -49,9 +41,9 @@ public final class Camera2Controller{
 
     private static Camera2Controller camera2Controller;
 
-    private Camera2Controller(){
+    //private Semaphore mCameraOpenCloseLock = new Semaphore(1);
 
-    }
+    private Camera2Controller(){}
 
     public static Camera2Controller getInstance(){
         if(camera2Controller == null){
@@ -60,21 +52,8 @@ public final class Camera2Controller{
         return camera2Controller;
     }
 
-    private String[] mCameraIdList;
-    private String[] mPhyCameraIdList;
-    public int curPhyCameraIdx = 0;
-
-    public int curCameraIdx = 0;
-    private int backCameraIdx = 0;
-    private int frontCameraIdx = 0;
-    public boolean isFacingFront = false;
-
-    private int viewHeight;
-    private int viewWidth;
     private float mScaleTime = 1;
     private int rotation = 0;
-
-
 
     private CameraManager mCameraManager;
     private CameraDevice mCameraDevice;
@@ -82,12 +61,11 @@ public final class Camera2Controller{
     private CameraCaptureSession mCameraCaptureSession;
 
     public CameraParameter mCameraParameter = CameraParameter.getInstance();
-    public CameraResolution mCameraResolution = CameraResolution.getInstance();
 
     private CaptureRequest.Builder previewBuilder;
     private CaptureRequest previewRequest;
     private CaptureResult captureResult;
-    
+
     private SurfaceTexture texture;
     private Surface surface;
 
@@ -96,34 +74,158 @@ public final class Camera2Controller{
     private Handler mBackgroundHandler;
     private HandlerThread mBackgroundThread;
 
-    public void initCameraController(int viewWidth, int viewHeight, SurfaceTexture texture) {
-        this.viewWidth = viewWidth;
-        this.viewHeight = viewHeight;
-        this.texture = texture;
+
+    public void openCamera() {
+        if (ContextCompat.checkSelfPermission(AppContextUtils.getAppActivity(), Manifest.permission.CAMERA)
+                != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+
+        try {
+            mCameraManager = (CameraManager) AppContextUtils.getAppActivity().
+                    getSystemService(Context.CAMERA_SERVICE);
+
+            UCamera.initCamera(mCameraManager);
+            UCamera.updateCamera();
+
+            mCameraCharacteristics = UCamera.characteristics;
+
+            UCamera.manager.openCamera(
+                    UCamera.cameraObjects[UCamera.cameraObjectIndex].getLogicId(),
+                    cameraDeviceStateListener,
+                    mBackgroundHandler
+            );
+
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+        }
     }
 
-    public void setRotation(int rotation) {
-        this.rotation = rotation;
+    public void closeCamera() {
+        try {
+            if (null != mCameraCaptureSession) {
+                mCameraCaptureSession.close();
+                mCameraCaptureSession = null;
+            }
+            if (null != mCameraDevice) {
+                mCameraDevice.close();
+                mCameraDevice = null;
+            }
+            if (null != imageSaver) {
+                imageSaver.getImageReader().close();
+                imageSaver = null;
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Interrupted while trying to lock camera closing.", e);
+        }
     }
 
-    public static CameraDevice getCameraDevice() {
-        return Camera2Controller.getInstance().mCameraDevice;
+    public void createCameraPreviewSession() {
+        try {
+
+            int w = UCamera.getPicSize().getWidth();
+            int h = UCamera.getPicSize().getHeight();
+
+            Log.e("Preview","w"+w+" h"+h);
+
+            if(h/2 >= 1440){
+                w/=2;
+                h/=2;
+            }
+
+            Log.e("Preview","w"+w+" h"+h);
+
+            texture.setDefaultBufferSize(w, h);
+
+            surface = new Surface(texture);
+
+            imageSaver = new ImageSaver(UCamera.getPicSize().getWidth(),
+                    UCamera.getPicSize().getHeight(),
+                    UCamera.imageFormat);
+
+            //单摄解决方案
+            if(!UCamera.cameraObjects[UCamera.cameraObjectIndex].isHasPhysicalCamera()) {
+
+                mCameraDevice.createCaptureSession(Arrays.asList(surface,
+                        imageSaver.getImageReader().getSurface()),
+                        captureSessionStateListener,
+                        mBackgroundHandler
+                );
+
+            }else{
+                OutputConfiguration configuration1 = new OutputConfiguration(surface);
+                configuration1.setPhysicalCameraId(
+                        UCamera.cameraObjects[UCamera.cameraObjectIndex].getCurPhysicId()
+                );
+
+                OutputConfiguration configuration2 = new OutputConfiguration(imageSaver.getImageReader().getSurface());
+                configuration2.setPhysicalCameraId(
+                        UCamera.cameraObjects[UCamera.cameraObjectIndex].getCurPhysicId()
+                );
+
+                mCameraDevice.createCaptureSessionByOutputConfigurations(Arrays.asList(configuration1,configuration2),
+                        captureSessionStateListener,
+                        mBackgroundHandler
+                );
+            }
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+        }
     }
 
-    public CameraCharacteristics getCameraCharacteristics() {
-        return mCameraCharacteristics;
-    }
 
-    public CaptureResult getCaptureResult() {
-        return captureResult;
-    }
+    private final CameraDevice.StateCallback cameraDeviceStateListener = new CameraDevice.StateCallback() {
+        @Override
+        public void onOpened(@NonNull CameraDevice cameraDevice) {
+            //mCameraOpenCloseLock.release();
+            mCameraDevice = cameraDevice;
+            UCamera.initPicSizeList();
+            UCamera.initVideoSizeList();
+            createCameraPreviewSession();
+        }
+
+        @Override
+        public void onDisconnected(@NonNull CameraDevice cameraDevice) {
+            //mCameraOpenCloseLock.release();
+            cameraDevice.close();
+            mCameraDevice = null;
+        }
+
+        @Override
+        public void onError(@NonNull CameraDevice cameraDevice, int error) {
+            //mCameraOpenCloseLock.release();
+            cameraDevice.close();
+            mCameraDevice = null;
+        }
+    };
+
+    private CameraCaptureSession.StateCallback captureSessionStateListener = new CameraCaptureSession.StateCallback() {
+        @Override
+        public void onConfigured(@NonNull CameraCaptureSession cameraCaptureSession) {
+            mCameraCaptureSession = cameraCaptureSession;
+            try {
+                previewBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+                previewBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
+                previewBuilder.set(CaptureRequest.NOISE_REDUCTION_MODE,CaptureRequest.NOISE_REDUCTION_MODE_HIGH_QUALITY);
+                previewBuilder.set(CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE,CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE_ON);
+                previewBuilder.set(CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE,CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE_ON);
+
+                previewBuilder.addTarget(surface);
+                cameraCaptureSession.setRepeatingRequest(previewBuilder.build(), previewCallback, null);
+            } catch (CameraAccessException e) {
+                e.printStackTrace();
+            }
+        }
+
+        @Override
+        public void onConfigureFailed(
+                @NonNull CameraCaptureSession cameraCaptureSession) {
+        }
+    };
 
     private CameraCaptureSession.CaptureCallback previewCallback = new CameraCaptureSession.CaptureCallback(){
         @Override
         public void onCaptureCompleted(@NonNull CameraCaptureSession session, @NonNull CaptureRequest request, @NonNull TotalCaptureResult result) {
-            if(CamSetting.isFaceDetectOpend) {
-                faceDetect(result);
-            }
             try {
                 mCameraParameter.exposureTime = result.get(CaptureResult.SENSOR_EXPOSURE_TIME);
                 mCameraParameter.iso = result.get(CaptureResult.SENSOR_SENSITIVITY);
@@ -165,186 +267,9 @@ public final class Camera2Controller{
         }
     };
 
-    private final CameraDevice.StateCallback cameraDeviceStateListener = new CameraDevice.StateCallback() {
-        @Override
-        public void onOpened(@NonNull CameraDevice cameraDevice) {
-            mCameraDevice = cameraDevice;
-            createCameraPreviewSession();
-        }
-
-        @Override
-        public void onDisconnected(@NonNull CameraDevice cameraDevice) {
-            cameraDevice.close();
-            mCameraDevice = null;
-        }
-
-        @Override
-        public void onError(@NonNull CameraDevice cameraDevice, int error) {
-            cameraDevice.close();
-            mCameraDevice = null;
-        }
-    };
-
-    private CameraCaptureSession.StateCallback captureSessionStateListener = new CameraCaptureSession.StateCallback() {
-        @Override
-        public void onConfigured(@NonNull CameraCaptureSession cameraCaptureSession) {
-            mCameraCaptureSession = cameraCaptureSession;
-            try {
-                previewBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
-                previewBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
-                previewBuilder.set(CaptureRequest.NOISE_REDUCTION_MODE,CaptureRequest.NOISE_REDUCTION_MODE_HIGH_QUALITY);
-                previewBuilder.set(CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE,CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE_ON);
-                previewBuilder.set(CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE,CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE_ON);
-
-                setCameraParams();
-
-                previewBuilder.addTarget(surface);
-
-                cameraCaptureSession.setRepeatingRequest(previewBuilder.build(), previewCallback, mBackgroundHandler);
-            } catch (CameraAccessException e) {
-                e.printStackTrace();
-            }
-        }
-
-        @Override
-        public void onConfigureFailed(
-                @NonNull CameraCaptureSession cameraCaptureSession) {
-        }
-    };
-    
-    private void createCameraPreviewSession() {
-        try {
-            texture.setDefaultBufferSize(mCameraResolution.getPicSize().getWidth(),
-                    mCameraResolution.getPicSize().getHeight());
-
-            surface = new Surface(texture);
-
-            imageSaver = new ImageSaver(mCameraResolution.getPicSize().getWidth(),
-                    mCameraResolution.getPicSize().getHeight(),
-                    CamSetting.isRaw ? ImageFormat.RAW_SENSOR : ImageFormat.JPEG);
-
-            if(mPhyCameraIdList.length <= 1) {
-                mCameraDevice.createCaptureSession(Arrays.asList(surface,
-                        imageSaver.getImageReader().getSurface()),
-                        captureSessionStateListener,
-                        mBackgroundHandler
-                );
-            }else {
-                OutputConfiguration configuration1 = new OutputConfiguration(surface);
-                configuration1.setPhysicalCameraId(mPhyCameraIdList[curPhyCameraIdx]);
-
-                OutputConfiguration configuration2 = new OutputConfiguration(imageSaver.getImageReader().getSurface());
-                configuration2.setPhysicalCameraId(mPhyCameraIdList[curPhyCameraIdx]);
-
-                mCameraDevice.createCaptureSessionByOutputConfigurations(Arrays.asList(configuration1,
-                        configuration2),
-                        captureSessionStateListener,
-                        mBackgroundHandler
-                );
-            }
-        } catch (CameraAccessException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void loadCameraLists(){
-        mCameraManager = (CameraManager) AppContextUtils.getAppActivity().getSystemService(Context.CAMERA_SERVICE);
-        try {
-            mCameraIdList = mCameraManager.getCameraIdList();
-
-            for(int i = 0; i < mCameraIdList.length; i++) {
-                mCameraCharacteristics = mCameraManager.getCameraCharacteristics(mCameraIdList[i]);
-                if (mCameraCharacteristics.get(CameraCharacteristics.LENS_FACING) == CameraMetadata.LENS_FACING_FRONT){
-                    frontCameraIdx = i;
-                    break;
-                }
-            }
-
-            if(isFacingFront) {
-                curCameraIdx = frontCameraIdx;
-            }else {
-                curCameraIdx = backCameraIdx;
-            }
-            mCameraCharacteristics = mCameraManager.getCameraCharacteristics(mCameraIdList[curCameraIdx])6
-            Object[] objects = mCameraCharacteristics.getPhysicalCameraIds().toArray();
-            mPhyCameraIdList = new String[objects.length];
-            for (int i = 0; i < objects.length; i++){
-                mPhyCameraIdList[i] = (String) objects[i];
-            }
-
-        } catch (CameraAccessException e) {
-            e.printStackTrace();
-        }
-
-    }
-    
-    private void loadCameraSize(){
-        StreamConfigurationMap map = mCameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
-        mCameraResolution.setPicSizes(Arrays.asList(map.getOutputSizes(CamSetting.isRaw ? ImageFormat.RAW_SENSOR : ImageFormat.JPEG)));
-        mCameraResolution.setVideoSizes(Arrays.asList(map.getOutputSizes(MediaRecorder.class)));
-        CamRates.rawFpsRanges = mCameraCharacteristics.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES);
-        Boolean available = mCameraCharacteristics.get(CameraCharacteristics.FLASH_INFO_AVAILABLE);
-        CamSetting.mFlashSupported = available == null ? false : available;
-    }
-
-    private void setCameraParams(){
-        Range<Integer> fpsRange = CamRates.rawFpsRanges[CamRates.rawFpsRanges.length-2];
-
-        if(CamRates.isForcedOpen60Fps){
-            fpsRange = new Range<>(60,60);
-        }
-        previewBuilder.set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, fpsRange);
-
-        int[] faceDetectModes = mCameraCharacteristics.get(CameraCharacteristics.STATISTICS_INFO_AVAILABLE_FACE_DETECT_MODES);
-        for(int i : faceDetectModes){
-            if(i ==CameraCharacteristics.STATISTICS_FACE_DETECT_MODE_SIMPLE && CamSetting.isFaceDetectOpend) {
-                previewBuilder.set(CaptureRequest.STATISTICS_FACE_DETECT_MODE, CameraCharacteristics.STATISTICS_FACE_DETECT_MODE_SIMPLE);
-                break;
-            }
-        }
-    }
-
-    private void faceDetect(TotalCaptureResult result){
-        Face[] faces = result.get(CaptureResult.STATISTICS_FACES);
-        Point[] points = new Point[faces.length];
-        Rect rectSensor = mCameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
-        if(faces!=null) {
-            final Rect[] rects = new Rect[faces.length];
-            int screenW = viewWidth;
-            int screenH = viewHeight;
-            int i = 0;
-            for (Face face : faces) {
-                Point point = face.getRightEyePosition();
-                Rect faceBounds = face.getBounds();
-                int l = (int) (screenH * ((float) faceBounds.left / rectSensor.width()));
-                int t = (int) (screenW * ((float) faceBounds.top / rectSensor.height()));
-                int r = (int) (screenH * ((float) faceBounds.right / rectSensor.width()));
-                int b = (int) (screenW * ((float) faceBounds.bottom / rectSensor.height()));
-
-                Rect rect = new Rect( screenW - b,l,screenW-t,r);
-                if(point!=null) {
-                    point.x = (int) (screenH * ((float) point.x / mCameraResolution.getPicSize().getWidth()));
-                    point.y = (int) (screenW - screenW * ((float) point.y / mCameraResolution.getPicSize().getHeight()));
-                    points[i] = point;
-                }
-                rects[i]=rect;
-                i++;
-            }
-        }
-    }
-
-    private Runnable detectRunnable = new Runnable() {
-        @Override
-        public void run() {
-            //brightNessDetect();
-            if(mBackgroundThread.isAlive()&&mBackgroundHandler!=null) {
-                mBackgroundHandler.postDelayed(detectRunnable,500);
-            }
-        }
-    };
 
     public void setFocus(Point point){
-        
+        /*
         Rect size = mCameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
         float realPreviewWidth = size.height();
         float realPreviewHeight = size.width();
@@ -373,7 +298,7 @@ public final class Camera2Controller{
             mCameraCaptureSession.setRepeatingRequest(previewBuilder.build(), null, mBackgroundHandler);
         } catch (CameraAccessException e) {
             e.printStackTrace();
-        }
+        }*/
     }
 
     public void setScaleTime(float time){
@@ -386,6 +311,8 @@ public final class Camera2Controller{
                 (int)((pixH-pixH/mScaleTime)*0.5),
                 (int)((pixW+pixW/mScaleTime)*0.5),
                 (int)((pixH+pixH/mScaleTime)*0.5)));
+
+        //previewBuilder.set(CaptureRequest.CONTROL_ZOOM_RATIO,time);
         previewRequest = previewBuilder.build();
 
         try {
@@ -396,27 +323,20 @@ public final class Camera2Controller{
     }
 
     public void startBackgroundThread() {
-        mBackgroundThread = new HandlerThread("CameraBackground");
+        mBackgroundThread = new HandlerThread("Background");
         mBackgroundThread.start();
         mBackgroundHandler = new Handler(mBackgroundThread.getLooper());
-        mBackgroundHandler.post(detectRunnable);
     }
 
     public void stopBackgroundThread() {
-        if(mBackgroundThread!=null) {
-            mBackgroundThread.quitSafely();
-            try {
-                mBackgroundThread.join();
-                mBackgroundThread = null;
-                mBackgroundHandler = null;
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+        mBackgroundThread.quitSafely();
+        try {
+            mBackgroundThread.join();
+            mBackgroundThread = null;
+            mBackgroundHandler = null;
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
-    }
-
-    public void takePicture2(){
-
     }
 
     public void takePicture() {
@@ -567,30 +487,24 @@ public final class Camera2Controller{
         }
     }
 
-    public void openCamera() {
-        if (ContextCompat.checkSelfPermission(AppContextUtils.getAppActivity(), Manifest.permission.CAMERA)
-                != PackageManager.PERMISSION_GRANTED) {
-            return;
-        }
-
-        try {
-            loadCameraLists();
-            loadCameraSize();
-            mCameraManager.openCamera(mCameraIdList[curCameraIdx], cameraDeviceStateListener, mBackgroundHandler);
-        } catch (CameraAccessException e) {
-            e.printStackTrace();
-        }
+    public void setTexture(SurfaceTexture texture) {
+        this.texture = texture;
     }
 
-    public void closeCamera() {
-        if (null != mCameraCaptureSession) {
-            mCameraCaptureSession.close();
-            mCameraCaptureSession = null;
-        }
-        if (null != mCameraDevice) {
-            mCameraDevice.close();
-            mCameraDevice = null;
-        }
-        imageSaver.getImageReader().close();
+    public void setRotation(int rotation) {
+        this.rotation = rotation;
     }
+
+    public static CameraDevice getCameraDevice() {
+        return Camera2Controller.getInstance().mCameraDevice;
+    }
+
+    public CameraCharacteristics getCameraCharacteristics() {
+        return mCameraCharacteristics;
+    }
+
+    public CaptureResult getCaptureResult() {
+        return captureResult;
+    }
+
 }

@@ -215,7 +215,7 @@ public class TabTextView extends BaseView {
     }
 
     public void animToIndex(final int idx){
-        performHapticFeedback(HapticFeedbackConstants.GESTURE_END);
+        performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK);
         if(animator != null && animator.isRunning()){
             animator.cancel();
         }else {

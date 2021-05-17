@@ -22,7 +22,7 @@
             android:layout_height="24dp"
             android:padding="4dp"
             android:src="@drawable/ic_back"
-            android:tint="@color/colorWhite"/>
+            app:tint="@color/colorWhite"/>
 
         <TextView
             android:layout_width="wrap_content"
@@ -47,234 +47,279 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@color/colorWhite"
-                android:textSize="13sp"
                 android:layout_marginLeft="28dp"
                 android:layout_marginTop="28dp"
-                android:text="通用"/>
+                android:layout_marginBottom="10dp"
+                android:alpha="0.7"
+                android:text="常规"
+                android:textColor="@color/colorWhite"
+                android:textSize="13sp" />
 
             <com.jike.ultracamera.view.SettingView
                 android:id="@+id/switch_click_sounds"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:Stv_title="快门声音"
-                app:Stv_img_res="@drawable/ic_volum"/>
+                app:Stv_img_res="@drawable/ic_volum"
+                app:Stv_title="快门声音" />
 
             <com.jike.ultracamera.view.SettingView
                 android:id="@+id/switch_location"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:Stv_title="地理位置"
-                app:Stv_img_res="@drawable/ic_location"/>
+                app:Stv_img_res="@drawable/ic_location"
+                app:Stv_title="地理位置" />
 
-            <com.jike.ultracamera.view.SettingView
-                android:id="@+id/switch_mirror"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:Stv_title="自拍镜象"
-                app:Stv_img_res="@drawable/ic_mirror"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/colorWhite"
-                android:textSize="13sp"
-                android:layout_marginLeft="28dp"
-                android:layout_marginTop="22dp"
-                android:text="拍照"/>
-
-            <LinearLayout
-                android:id="@+id/item_size"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginLeft="26dp"
-                android:layout_marginRight="26dp"
-                android:layout_marginTop="14dp"
-                android:layout_marginBottom="14dp">
-
-                <ImageView
-                    android:layout_width="21dp"
-                    android:layout_height="21dp"
-                    android:padding="2dp"
-                    android:src="@drawable/ic_pic_size"
-                    android:scaleType="centerInside"
-                    android:tint="@color/colorWhite"/>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/colorWhite"
-                    android:layout_marginLeft="12dp"
-                    android:text="尺寸"/>
-
-                <Space
-                    android:layout_width="0dp"
-                    android:layout_height="0dp"
-                    android:layout_weight="1"/>
-
-                <TextView
-                    android:id="@+id/tv_pic_size"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/colorWhite"
-                    android:textSize="12sp"
-                    android:text=""/>
-
-            </LinearLayout>
 
             <com.jike.ultracamera.view.SettingView
                 android:id="@+id/switch_line"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:Stv_title="构图线"
-                app:Stv_img_res="@drawable/ic_line"/>
+                app:Stv_img_res="@drawable/ic_line"
+                app:Stv_title="构图线" />
+
+            <LinearLayout
+                android:id="@+id/item_device"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="28dp"
+                android:layout_marginTop="14dp"
+                android:layout_marginRight="28dp"
+                android:layout_marginBottom="14dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:scaleType="centerInside"
+                    android:src="@drawable/ic_lens"
+                    app:tint="@color/colorWhite" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="12dp"
+                    android:text="设备支持"
+                    android:textColor="@color/colorWhite" />
+
+                <Space
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
+
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:padding="2dp"
+                    android:scaleType="centerInside"
+                    android:src="@drawable/ic_right"
+                    app:tint="@color/colorWhite" />
+
+            </LinearLayout>
+
+
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="28dp"
+                android:layout_marginTop="22dp"
+                android:layout_marginBottom="10dp"
+                android:text="照片"
+                android:alpha="0.7"
+                android:textColor="@color/colorWhite"
+                android:textSize="13sp" />
+
+            <LinearLayout
+                android:id="@+id/item_size"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="28dp"
+                android:layout_marginTop="14dp"
+                android:layout_marginRight="28dp"
+                android:layout_marginBottom="14dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:scaleType="centerInside"
+                    android:src="@drawable/ic_aspect_ratio"
+                    app:tint="@color/colorWhite" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="12dp"
+                    android:text="尺寸"
+                    android:textColor="@color/colorWhite" />
+
+                <Space
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
+
+                <TextView
+                    android:id="@+id/tv_pic_size"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:textColor="@color/colorWhite"
+                    android:textSize="12sp" />
+
+            </LinearLayout>
+
+            <com.jike.ultracamera.view.SettingView
+                android:id="@+id/switch_mirror"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:Stv_img_res="@drawable/ic_mirror"
+                app:Stv_title="自拍镜象" />
+
 
             <com.jike.ultracamera.view.SettingView
                 android:id="@+id/switch_face_detect"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:Stv_title="面部监测"
-                app:Stv_img_res="@drawable/ic_face_detect"/>
+                app:Stv_img_res="@drawable/ic_face_detect"
+                app:Stv_title="面部监测" />
 
             <com.jike.ultracamera.view.SettingView
                 android:id="@+id/switch_scene_detect"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:Stv_title="自动模式"
-                app:Stv_img_res="@drawable/ic_scene_detect"/>
-
-            <com.jike.ultracamera.view.SettingView
-                android:id="@+id/switch_isyuv"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:Stv_title="使用YUV数据流"
-                app:Stv_img_res="@drawable/ic_yuv"/>
+                app:Stv_img_res="@drawable/ic_lens_idea"
+                app:Stv_title="智能镜头建议" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@color/colorWhite"
-                android:textSize="13sp"
                 android:layout_marginLeft="28dp"
                 android:layout_marginTop="22dp"
-                android:text="录像"/>
+                android:layout_marginBottom="10dp"
+                android:text="录像"
+                android:alpha="0.7"
+                android:textColor="@color/colorWhite"
+                android:textSize="13sp" />
+
             <LinearLayout
                 android:id="@+id/item_video_size"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginLeft="26dp"
-                android:layout_marginRight="26dp"
+                android:layout_marginLeft="28dp"
                 android:layout_marginTop="14dp"
-                android:layout_marginBottom="14dp">
+                android:layout_marginRight="28dp"
+                android:layout_marginBottom="14dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
                 <ImageView
                     android:layout_width="21dp"
                     android:layout_height="21dp"
-                    android:src="@drawable/ic_video_size_4k"
                     android:scaleType="centerInside"
-                    android:tint="@color/colorWhite"/>
+                    android:src="@drawable/ic_video_size_4k"
+                    app:tint="@color/colorWhite" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textColor="@color/colorWhite"
                     android:layout_marginLeft="12dp"
-                    android:text="分辨率"/>
+                    android:text="分辨率"
+                    android:textColor="@color/colorWhite" />
 
                 <Space
                     android:layout_width="0dp"
                     android:layout_height="0dp"
-                    android:layout_weight="1"/>
+                    android:layout_weight="1" />
 
                 <TextView
                     android:id="@+id/tv_video_size"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:text="4k"
                     android:textColor="@color/colorWhite"
-                    android:textSize="12sp"
-                    android:text="4k"/>
+                    android:textSize="12sp" />
 
             </LinearLayout>
+
             <LinearLayout
                 android:id="@+id/item_video_rate"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginLeft="26dp"
-                android:layout_marginRight="26dp"
+                android:layout_marginLeft="28dp"
                 android:layout_marginTop="14dp"
-                android:layout_marginBottom="14dp">
+                android:layout_marginRight="28dp"
+                android:layout_marginBottom="14dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
                 <ImageView
                     android:layout_width="21dp"
                     android:layout_height="21dp"
-                    android:src="@drawable/ic_fps"
                     android:scaleType="centerInside"
-                    android:tint="@color/colorWhite"/>
+                    android:src="@drawable/ic_fps"
+                    app:tint="@color/colorWhite" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textColor="@color/colorWhite"
                     android:layout_marginLeft="12dp"
-                    android:text="帧率"/>
+                    android:text="帧率"
+                    android:textColor="@color/colorWhite" />
 
                 <Space
                     android:layout_width="0dp"
                     android:layout_height="0dp"
-                    android:layout_weight="1"/>
+                    android:layout_weight="1" />
 
                 <TextView
                     android:id="@+id/tv_video_rates"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:text="60FPS"
                     android:textColor="@color/colorWhite"
-                    android:textSize="12sp"
-                    android:text="60FPS"/>
+                    android:textSize="12sp" />
 
             </LinearLayout>
+
             <LinearLayout
                 android:id="@+id/item_video_encode"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginLeft="26dp"
-                android:layout_marginRight="26dp"
+                android:layout_marginLeft="28dp"
                 android:layout_marginTop="14dp"
-                android:layout_marginBottom="14dp">
+                android:layout_marginRight="28dp"
+                android:layout_marginBottom="14dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
                 <ImageView
                     android:layout_width="21dp"
                     android:layout_height="21dp"
-                    android:src="@drawable/ic_encode"
                     android:scaleType="centerInside"
-                    android:tint="@color/colorWhite"/>
+                    android:src="@drawable/ic_encode"
+                    app:tint="@color/colorWhite" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textColor="@color/colorWhite"
                     android:layout_marginLeft="12dp"
-                    android:text="编码"/>
+                    android:text="编码"
+                    android:textColor="@color/colorWhite" />
 
                 <Space
                     android:layout_width="0dp"
                     android:layout_height="0dp"
-                    android:layout_weight="1"/>
+                    android:layout_weight="1" />
 
                 <TextView
                     android:id="@+id/tv_video_encode"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:text="H.264"
                     android:textColor="@color/colorWhite"
-                    android:textSize="12sp"
-                    android:text="H.264"/>
+                    android:textSize="12sp" />
 
             </LinearLayout>
 
@@ -282,89 +327,93 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@color/colorWhite"
-                android:textSize="13sp"
                 android:layout_marginLeft="28dp"
                 android:layout_marginTop="22dp"
-                android:text="其它"/>
+                android:layout_marginBottom="10dp"
+                android:text="高级选项"
+                android:alpha="0.7"
+                android:textColor="@color/colorWhite"
+                android:textSize="13sp" />
 
             <LinearLayout
                 android:id="@+id/item_lab"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
                 android:layout_marginLeft="26dp"
-                android:layout_marginRight="26dp"
                 android:layout_marginTop="14dp"
-                android:layout_marginBottom="14dp">
+                android:layout_marginRight="26dp"
+                android:layout_marginBottom="14dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
                 <ImageView
                     android:layout_width="21dp"
                     android:layout_height="21dp"
-                    android:src="@drawable/ic_lib"
                     android:scaleType="centerInside"
-                    android:tint="@color/colorWhite"/>
+                    android:src="@drawable/ic_lib"
+                    app:tint="@color/colorWhite" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textColor="@color/colorWhite"
                     android:layout_marginLeft="12dp"
-                    android:text="实验性功能"/>
+                    android:text="实验性功能"
+                    android:textColor="@color/colorWhite" />
 
                 <Space
                     android:layout_width="0dp"
                     android:layout_height="0dp"
-                    android:layout_weight="1"/>
+                    android:layout_weight="1" />
 
                 <ImageView
                     android:layout_width="18dp"
                     android:layout_height="18dp"
                     android:padding="2dp"
-                    android:src="@drawable/ic_right"
                     android:scaleType="centerInside"
-                    android:tint="@color/colorWhite"/>
+                    android:src="@drawable/ic_right"
+                    app:tint="@color/colorWhite" />
 
             </LinearLayout>
+
+
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
                 android:layout_marginLeft="26dp"
-                android:layout_marginRight="26dp"
                 android:layout_marginTop="44dp"
-                android:layout_marginBottom="14dp">
+                android:layout_marginRight="26dp"
+                android:layout_marginBottom="14dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
                 <ImageView
                     android:layout_width="21dp"
                     android:layout_height="21dp"
                     android:padding="2dp"
-                    android:src="@drawable/ic_pen"
                     android:scaleType="centerInside"
-                    android:tint="@color/colorWhite"/>
+                    android:src="@drawable/ic_pen"
+                    app:tint="@color/colorWhite" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textColor="@color/colorWhite"
                     android:layout_marginLeft="12dp"
-                    android:text="建议反馈"/>
+                    android:text="建议反馈"
+                    android:textColor="@color/colorWhite" />
 
                 <Space
                     android:layout_width="0dp"
                     android:layout_height="0dp"
-                    android:layout_weight="1"/>
+                    android:layout_weight="1" />
 
                 <ImageView
                     android:layout_width="18dp"
                     android:layout_height="18dp"
                     android:padding="2dp"
-                    android:src="@drawable/ic_right"
                     android:scaleType="centerInside"
-                    android:tint="@color/colorWhite"/>
+                    android:src="@drawable/ic_right"
+                    app:tint="@color/colorWhite" />
 
             </LinearLayout>
 
@@ -372,21 +421,21 @@
             <com.daily.flexui.viewgroup.NeonLayout
                 android:layout_width="match_parent"
                 android:layout_height="44dp"
-                app:neonlayout_radius="30dp"
-                app:neonlayout_light_radius="5dp"
                 android:layout_marginLeft="26dp"
-                android:layout_marginRight="36dp"
                 android:layout_marginTop="14dp"
+                android:layout_marginRight="36dp"
                 android:layout_marginBottom="14dp"
                 app:neonlayout_issolid="true"
-                app:neonlayout_lightcolor="@color/colorAccent">
+                app:neonlayout_light_radius="5dp"
+                app:neonlayout_lightcolor="@color/colorAccent"
+                app:neonlayout_radius="30dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_gravity="center"
                     android:text="恢复默认"
-                    android:textColor="@color/colorWhite"
-                    android:layout_gravity="center"/>
+                    android:textColor="@color/colorWhite" />
 
             </com.daily.flexui.viewgroup.NeonLayout>
 

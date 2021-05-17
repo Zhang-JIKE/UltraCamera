@@ -12,7 +12,7 @@ public class CameraTouchListener implements View.OnTouchListener {
     private float oldY;
     private float oldX1,oldX2,oldY1,oldY2;
 
-    private float oldScale = 0;
+    public float oldScale = 0;
     private float newScale;
 
     private boolean isMultipleFingerDown = false;
@@ -51,8 +51,8 @@ public class CameraTouchListener implements View.OnTouchListener {
                 float ody = oldY1 - oldY2 ;
                 float value = 10*(float)(Math.sqrt(dx * dx + dy * dy)-Math.sqrt(odx * odx + ody * ody))/resistNum;
                 newScale = value + oldScale;
-                if(newScale<1) {
-                    newScale = 1;
+                if(newScale<0.5) {
+                    newScale = 0.5f;
                 }
                 if(newScale>10){
                     newScale = 10;
@@ -89,7 +89,7 @@ public class CameraTouchListener implements View.OnTouchListener {
         return true;
     }
 
-    private String scale2String(float scaleTime){
+    public static String scale2String(float scaleTime){
         DecimalFormat mFormat = new DecimalFormat(".0");
         String formatNum = mFormat.format(scaleTime);
         if (formatNum.contains(".0")) {

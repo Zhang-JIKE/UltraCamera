@@ -17,9 +17,7 @@ import androidx.core.content.ContextCompat;
 import com.daily.flexui.BaseActivity;
 import com.daily.flexui.util.AppContextUtils;
 import com.jike.ultracamera.cameradata.CamEncode;
-import com.jike.ultracamera.cameradata.CamRates;
 import com.jike.ultracamera.cameradata.CamSetting;
-import com.jike.ultracamera.cameradata.CameraResolution;
 
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 
@@ -65,7 +63,7 @@ public class MainActivity extends BaseActivity {
             }
             MediaPlayer player = MediaPlayer.create(getApplicationContext(), R.raw.camera_click_short);
             player.start();
-            cameraFragment.cameraView.getCamera2Controller().takePicture();
+            cameraFragment.cameraView.getController().takePicture();
         }
         return super.onKeyDown(keyCode, event);
     }
@@ -125,8 +123,7 @@ public class MainActivity extends BaseActivity {
 
     private void initSettingsData(){
         CamSetting.initSettings();
-        CameraResolution.getInstance().initSettings();
-        CamRates.initSettings();
+        //CamRates.initSettings();
         CamEncode.initSettings();
     }
 

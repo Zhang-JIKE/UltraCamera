@@ -10,7 +10,6 @@ import androidx.annotation.NonNull;
 
 import com.daily.flexui.util.DisplayUtils;
 import com.jike.ultracamera.R;
-import com.jike.ultracamera.cameradata.CamRates;
 import com.jike.ultracamera.view.CheckView;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
@@ -27,10 +26,10 @@ public class SettingVideoRatesDialog extends BottomSheetDialog {
 
     public SettingVideoRatesDialog(@NonNull Context context) {
         super(context);
-        createView(context);
+        //createView(context);
     }
 
-    public void createView(Context context) {
+    /*public void createView(Context context) {
         final View bottomSheetView = getLayoutInflater().inflate(R.layout.dialog_setting_video_rates, null);
         setContentView(bottomSheetView);
 
@@ -91,6 +90,6 @@ public class SettingVideoRatesDialog extends BottomSheetDialog {
 
     public void setOnSelectItemListener(OnSelectItemListener onSelectItemListener) {
         this.onSelectItemListener = onSelectItemListener;
-    }
+    }*/
 
 }
