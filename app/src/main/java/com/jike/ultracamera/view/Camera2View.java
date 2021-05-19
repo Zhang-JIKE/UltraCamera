@@ -3,11 +3,11 @@ package com.jike.ultracamera.view;
 import android.content.Context;
 import android.util.AttributeSet;
 
-import com.jike.ultracamera.camera2.Camera2Controller;
+import com.jike.ultracamera.camera2.UCameraController;
 
 public class Camera2View extends BaseCameraView {
 
-  private Camera2Controller camera2Controller;
+  private UCameraController UCameraController;
 
   public Camera2View(Context context) {
     super(context);
@@ -15,10 +15,10 @@ public class Camera2View extends BaseCameraView {
 
   public Camera2View(Context context, AttributeSet attrs) {
     super(context, attrs);
-    camera2Controller = Camera2Controller.getInstance();
+    UCameraController = UCameraController.getInstance();
   }
 
-  public Camera2Controller getController() {
-    return camera2Controller;
+  public UCameraController getController() {
+    return UCameraController;
   }
 }

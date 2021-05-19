@@ -20,8 +20,8 @@ import androidx.fragment.app.Fragment;
 
 import com.daily.flexui.util.AppContextUtils;
 import com.daily.flexui.view.CircleImageView;
-import com.jike.ultracamera.camera2.Camera2Controller;
-import com.jike.ultracamera.camera2.UCamera;
+import com.jike.ultracamera.camera2.UCameraController;
+import com.jike.ultracamera.camera2.UCameraManager;
 import com.jike.ultracamera.cameradata.CamMode;
 import com.jike.ultracamera.cameradata.CamSetting;
 import com.jike.ultracamera.interfaces.CameraTouchListener;
@@ -89,7 +89,7 @@ public class CameraFragment extends Fragment implements View.OnClickListener{
     @Override
     public void onResume() {
         super.onResume();
-        Camera2Controller.getInstance().startBackgroundThread();
+        //UCameraController.getInstance().startBackgroundThread();
         initSensorListener();
 
         if (cameraView.isAvailable()) {
@@ -128,7 +128,7 @@ public class CameraFragment extends Fragment implements View.OnClickListener{
         lensView.setOnLensSelectedListener(new LensView.OnLensSelectedListener() {
             @Override
             public void onLensSelectedChanged(String id) {
-                UCamera.getCameraObject().setCurPhysicId(id);
+                UCameraManager.getCameraObject().setCurPhysicId(id);
                 openCamera();
             }
         });
@@ -137,7 +137,7 @@ public class CameraFragment extends Fragment implements View.OnClickListener{
         ivFacingSwitch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                UCamera.setIsOpenedFrontCamera(!UCamera.isOpenedFrontCamera);
+                UCameraManager.setIsOpenedFrontCamera(!UCameraManager.isOpenedFrontCamera);
                 openCamera();
             }
         });
@@ -167,18 +167,18 @@ public class CameraFragment extends Fragment implements View.OnClickListener{
                 if(x >= -1 && x < 1){
                     if(y > 0){
                         //0
-                        Camera2Controller.getInstance().setRotation(90);
+                        UCameraController.getInstance().setRotation(90);
                     }
                     if(y < 0){
                         //180
-                        Camera2Controller.getInstance().setRotation(90 + 180);
+                        UCameraController.getInstance().setRotation(90 + 180);
                     }
                 }else if(x > 6){
                     //-90
-                    Camera2Controller.getInstance().setRotation(90 - 90);
+                    UCameraController.getInstance().setRotation(90 - 90);
                 }else if(x < -6){
                     //90
-                    Camera2Controller.getInstance().setRotation(90 + 90);
+                    UCameraController.getInstance().setRotation(90 + 90);
                 }
             }
 
@@ -282,15 +282,15 @@ public class CameraFragment extends Fragment implements View.OnClickListener{
         cameraView.getController().openCamera();
 
         cameraView.setAspectRatio(
-                UCamera.getPicSize().getHeight(),
-                UCamera.getPicSize().getWidth()
+                UCameraManager.getPicSize().getHeight(),
+                UCameraManager.getPicSize().getWidth()
         );
 
         //cameraView.configureTransform(UCamera.getPicSize().getHeight(),UCamera.getPicSize().getWidth());
 
-        lensView.setLens(UCamera.getCameraObject().getTitleList(),
-                UCamera.getCameraObject().getPhysicIds(),
-                UCamera.getCameraObject().getAngleList());
+        lensView.setLens(UCameraManager.getCameraObject().getTitleList(),
+                UCameraManager.getCameraObject().getPhysicIds(),
+                UCameraManager.getCameraObject().getAngleList());
 
         cameraView.getController().setTexture(cameraView.getSurfaceTexture());
 

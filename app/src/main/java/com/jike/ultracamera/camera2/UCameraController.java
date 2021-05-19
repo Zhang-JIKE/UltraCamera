@@ -29,7 +29,7 @@ import com.daily.flexui.util.AppContextUtils;
 import com.jike.ultracamera.cameradata.CamMode;
 import com.jike.ultracamera.cameradata.CamPara;
 import com.jike.ultracamera.cameradata.CamSetting;
-import com.jike.ultracamera.cameradata.CameraParameter;
+import com.jike.ultracamera.cameradata.CameraPara;
 import com.jike.ultracamera.helper.CaptureListenerHelper;
 
 
@@ -37,19 +37,19 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public final class Camera2Controller{
+public final class UCameraController {
 
-    private static Camera2Controller camera2Controller;
+    private static UCameraController UCameraController;
 
     //private Semaphore mCameraOpenCloseLock = new Semaphore(1);
 
-    private Camera2Controller(){}
+    private UCameraController(){}
 
-    public static Camera2Controller getInstance(){
-        if(camera2Controller == null){
-            camera2Controller = new Camera2Controller();
+    public static UCameraController getInstance(){
+        if(UCameraController == null){
+            UCameraController = new UCameraController();
         }
-        return camera2Controller;
+        return UCameraController;
     }
 
     private float mScaleTime = 1;
@@ -59,8 +59,6 @@ public final class Camera2Controller{
     private CameraDevice mCameraDevice;
     private CameraCharacteristics mCameraCharacteristics;
     private CameraCaptureSession mCameraCaptureSession;
-
-    public CameraParameter mCameraParameter = CameraParameter.getInstance();
 
     private CaptureRequest.Builder previewBuilder;
     private CaptureRequest previewRequest;
@@ -85,13 +83,13 @@ public final class Camera2Controller{
             mCameraManager = (CameraManager) AppContextUtils.getAppActivity().
                     getSystemService(Context.CAMERA_SERVICE);
 
-            UCamera.initCamera(mCameraManager);
-            UCamera.updateCamera();
+            UCameraManager.initCamera(mCameraManager);
+            UCameraManager.updateCamera();
 
-            mCameraCharacteristics = UCamera.characteristics;
+            mCameraCharacteristics = UCameraManager.characteristics;
 
-            UCamera.manager.openCamera(
-                    UCamera.cameraObjects[UCamera.cameraObjectIndex].getLogicId(),
+            UCameraManager.manager.openCamera(
+                    UCameraManager.UCameraObjects[UCameraManager.curCameraObjectIndex].getLogicId(),
                     cameraDeviceStateListener,
                     mBackgroundHandler
             );
@@ -123,8 +121,8 @@ public final class Camera2Controller{
     public void createCameraPreviewSession() {
         try {
 
-            int w = UCamera.getPicSize().getWidth();
-            int h = UCamera.getPicSize().getHeight();
+            int w = UCameraManager.getPicSize().getWidth();
+            int h = UCameraManager.getPicSize().getHeight();
 
             Log.e("Preview","w"+w+" h"+h);
 
@@ -139,12 +137,12 @@ public final class Camera2Controller{
 
             surface = new Surface(texture);
 
-            imageSaver = new ImageSaver(UCamera.getPicSize().getWidth(),
-                    UCamera.getPicSize().getHeight(),
-                    UCamera.imageFormat);
+            imageSaver = new ImageSaver(UCameraManager.getPicSize().getWidth(),
+                    UCameraManager.getPicSize().getHeight(),
+                    UCameraManager.imageFormat);
 
             //单摄解决方案
-            if(!UCamera.cameraObjects[UCamera.cameraObjectIndex].isHasPhysicalCamera()) {
+            if(!UCameraManager.UCameraObjects[UCameraManager.curCameraObjectIndex].isHasPhysicalCamera()) {
 
                 mCameraDevice.createCaptureSession(Arrays.asList(surface,
                         imageSaver.getImageReader().getSurface()),
@@ -155,12 +153,12 @@ public final class Camera2Controller{
             }else{
                 OutputConfiguration configuration1 = new OutputConfiguration(surface);
                 configuration1.setPhysicalCameraId(
-                        UCamera.cameraObjects[UCamera.cameraObjectIndex].getCurPhysicId()
+                        UCameraManager.getCameraObject().getCurPhysicId()
                 );
 
                 OutputConfiguration configuration2 = new OutputConfiguration(imageSaver.getImageReader().getSurface());
                 configuration2.setPhysicalCameraId(
-                        UCamera.cameraObjects[UCamera.cameraObjectIndex].getCurPhysicId()
+                        UCameraManager.getCameraObject().getCurPhysicId()
                 );
 
                 mCameraDevice.createCaptureSessionByOutputConfigurations(Arrays.asList(configuration1,configuration2),
@@ -179,8 +177,8 @@ public final class Camera2Controller{
         public void onOpened(@NonNull CameraDevice cameraDevice) {
             //mCameraOpenCloseLock.release();
             mCameraDevice = cameraDevice;
-            UCamera.initPicSizeList();
-            UCamera.initVideoSizeList();
+            UCameraManager.initPicSizeList();
+            UCameraManager.initVideoSizeList();
             createCameraPreviewSession();
         }
 
@@ -227,9 +225,9 @@ public final class Camera2Controller{
         @Override
         public void onCaptureCompleted(@NonNull CameraCaptureSession session, @NonNull CaptureRequest request, @NonNull TotalCaptureResult result) {
             try {
-                mCameraParameter.exposureTime = result.get(CaptureResult.SENSOR_EXPOSURE_TIME);
-                mCameraParameter.iso = result.get(CaptureResult.SENSOR_SENSITIVITY);
-                mCameraParameter.isoBoost = result.get(CaptureResult.CONTROL_POST_RAW_SENSITIVITY_BOOST);
+                CameraPara.exposureTime = result.get(CaptureResult.SENSOR_EXPOSURE_TIME);
+                CameraPara.iso = result.get(CaptureResult.SENSOR_SENSITIVITY);
+                CameraPara.isoBoost = result.get(CaptureResult.CONTROL_POST_RAW_SENSITIVITY_BOOST);
             }catch (NullPointerException e){
                 e.printStackTrace();
             }
@@ -411,7 +409,7 @@ public final class Camera2Controller{
                             builderSuperRes.set(CaptureRequest.NOISE_REDUCTION_MODE, CaptureRequest.NOISE_REDUCTION_MODE_OFF);
 
                             builderSuperRes.set(CaptureRequest.CONTROL_POST_RAW_SENSITIVITY_BOOST, 100);
-                            long expTime = (long) (mCameraParameter.exposureTime * (int) (mCameraParameter.iso / 50f)*mCameraParameter.isoBoost/100f);
+                            long expTime = (long) (CameraPara.exposureTime * (int) (CameraPara.iso / 50f)*CameraPara.isoBoost/100f);
 
                             if(CamSetting.isNightOpened) {
                                 expTime = CamPara.timeIncrease(expTime, 2);
@@ -450,10 +448,10 @@ public final class Camera2Controller{
                             builderSuperNight.set(CaptureRequest.NOISE_REDUCTION_MODE, CaptureRequest.NOISE_REDUCTION_MODE_OFF);
                         }
                         builderSuperNight.set(CaptureRequest.CONTROL_POST_RAW_SENSITIVITY_BOOST,  200);
-                        builderSuperNight.set(CaptureRequest.SENSOR_EXPOSURE_TIME, CameraParameter.ONE_SECOND_DIV_8);
+                        builderSuperNight.set(CaptureRequest.SENSOR_EXPOSURE_TIME, CameraPara.ONE_SECOND_DIV_8);
                         builderSuperNight.set(CaptureRequest.SENSOR_SENSITIVITY,
-                                (int) ((mCameraParameter.iso / (mCameraParameter.ONE_SECOND_DIV_8 / mCameraParameter.exposureTime)) * mCameraParameter.isoBoost / 100f) / 2);
-                        indicatorDuration += CameraParameter.ONE_SECOND_DIV_8 / 1000000;
+                                (int) ((CameraPara.iso / (CameraPara.ONE_SECOND_DIV_8 / CameraPara.exposureTime)) * CameraPara.isoBoost / 100f) / 2);
+                        indicatorDuration += CameraPara.ONE_SECOND_DIV_8 / 1000000;
 
                         builderSuperNight.set(CaptureRequest.JPEG_ORIENTATION, rotation);
 
@@ -470,9 +468,9 @@ public final class Camera2Controller{
                         builder1.set(CaptureRequest.NOISE_REDUCTION_MODE, CaptureRequest.NOISE_REDUCTION_MODE_OFF);
                         builder1.set(CaptureRequest.NOISE_REDUCTION_MODE, CaptureRequest.NOISE_REDUCTION_MODE_OFF);
                         builder1.set(CaptureRequest.CONTROL_POST_RAW_SENSITIVITY_BOOST, 100);
-                        builder1.set(CaptureRequest.SENSOR_EXPOSURE_TIME, (long) (CameraParameter.ONE_SECOND / 4f));
+                        builder1.set(CaptureRequest.SENSOR_EXPOSURE_TIME, (long) (CameraPara.ONE_SECOND / 4f));
                         builder1.set(CaptureRequest.SENSOR_SENSITIVITY,
-                                (int) ((int) (mCameraParameter.iso / (CameraParameter.ONE_SECOND / 4.0f / mCameraParameter.exposureTime)) * mCameraParameter.isoBoost / 100.0f));
+                                (int) ((int) (CameraPara.iso / (CameraPara.ONE_SECOND / 4.0f / CameraPara.exposureTime)) * CameraPara.isoBoost / 100.0f));
                         builder1.addTarget(new Surface(texture));
                         builder1.set(CaptureRequest.JPEG_ORIENTATION, rotation);
                         builder1.addTarget(imageSaver.getImageReader().getSurface());
@@ -496,7 +494,7 @@ public final class Camera2Controller{
     }
 
     public static CameraDevice getCameraDevice() {
-        return Camera2Controller.getInstance().mCameraDevice;
+        return UCameraController.getInstance().mCameraDevice;
     }
 
     public CameraCharacteristics getCameraCharacteristics() {

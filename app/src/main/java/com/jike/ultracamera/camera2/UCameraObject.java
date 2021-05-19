@@ -1,6 +1,6 @@
 package com.jike.ultracamera.camera2;
 
-public class CameraObject {
+public class UCameraObject {
     private boolean facingFront;
     private String logicId;
     private String[] physicIds;

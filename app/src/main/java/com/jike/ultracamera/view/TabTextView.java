@@ -44,7 +44,7 @@ public class TabTextView extends BaseView {
     int widSum = 0;
     private float donwX;
 
-    private int hMargin = DisplayUtils.dp2px(48);
+    private int hMargin = DisplayUtils.dp2px(42);
     private int indicatorRadius = DisplayUtils.dp2px(3);
 
     public interface TabListener{
@@ -68,7 +68,7 @@ public class TabTextView extends BaseView {
     @Override
     public void init(AttributeSet attrs) {
         TypedArray array = getContext().getTheme().obtainStyledAttributes(attrs, com.daily.flexui.R.styleable.FIconView, 0, 0);
-        textSize = array.getDimension(com.daily.flexui.R.styleable.GradientTextView_gradienttextview_textsize, DisplayUtils.sp2px(15));
+        textSize = array.getDimension(com.daily.flexui.R.styleable.GradientTextView_gradienttextview_textsize, DisplayUtils.sp2px(14.5f));
 
         initData();
 
@@ -102,9 +102,7 @@ public class TabTextView extends BaseView {
         tabText.add("夜景");
         tabText.add("拍照");
         tabText.add("融合");
-        tabText.add("超采样");
 
-        points.add(new Point());
         points.add(new Point());
         points.add(new Point());
         points.add(new Point());

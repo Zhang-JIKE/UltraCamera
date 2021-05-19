@@ -10,7 +10,7 @@ import androidx.annotation.NonNull;
 
 import com.daily.flexui.util.DisplayUtils;
 import com.jike.ultracamera.R;
-import com.jike.ultracamera.camera2.UCamera;
+import com.jike.ultracamera.camera2.UCameraManager;
 import com.jike.ultracamera.view.CheckView;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
@@ -49,8 +49,8 @@ public class SettingPicSizeDialog extends BottomSheetDialog {
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         params.setMargins(DisplayUtils.dp2px(26), DisplayUtils.dp2px(14), DisplayUtils.dp2px(26), DisplayUtils.dp2px(14));
 
-        for(int i = 0; i < UCamera.Resolution.picSizeList.length; i++){
-            Size size = UCamera.Resolution.picSizeList[i];
+        for(int i = 0; i < UCameraManager.Resolution.picSizeList.length; i++){
+            Size size = UCameraManager.Resolution.picSizeList[i];
             final CheckView checkView = new CheckView(getContext());
 
             int gcd = gcd(size.getWidth(),size.getHeight());
@@ -64,7 +64,7 @@ public class SettingPicSizeDialog extends BottomSheetDialog {
                 @Override
                 public void onClick(View v) {
                     checkView.setChecked(true);
-                    UCamera.Resolution.picSizeIndex = finalI;
+                    UCameraManager.Resolution.picSizeIndex = finalI;
                     unCheckOthersView();
                     if(onSelectItemListener!=null){
                         onSelectItemListener.OnSelectItem(finalI);
@@ -73,7 +73,7 @@ public class SettingPicSizeDialog extends BottomSheetDialog {
                 }
             });
 
-            if(i == UCamera.Resolution.picSizeIndex){
+            if(i == UCameraManager.Resolution.picSizeIndex){
                 checkView.setChecked(true);
             }
 
@@ -85,7 +85,7 @@ public class SettingPicSizeDialog extends BottomSheetDialog {
 
     private void unCheckOthersView(){
         for(int i = 0; i < checkViews.size(); i++){
-            if(i != UCamera.Resolution.picSizeIndex){
+            if(i != UCameraManager.Resolution.picSizeIndex){
                 checkViews.get(i).setChecked(false);
             }
         }

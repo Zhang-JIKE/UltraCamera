@@ -2,19 +2,16 @@ package com.jike.ultracamera.processor;
 
 import android.graphics.Bitmap;
 import android.graphics.ImageFormat;
-import android.hardware.camera2.CameraCharacteristics;
-import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.DngCreator;
 import android.media.Image;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 
 
-import com.jike.ultracamera.camera2.Camera2Controller;
+import com.jike.ultracamera.camera2.UCameraController;
 import com.jike.ultracamera.helper.BitmapHelper;
 import com.jike.ultracamera.helper.ImageToByteArrayHelper;
 import com.jike.ultracamera.image.YuvImage;
@@ -269,9 +266,9 @@ public abstract class BaseProcessor {
 
     private String saveRaw(Image image){
         while (true) {
-            if(Camera2Controller.getInstance().getCaptureResult() != null) {
-                DngCreator dngCreator = new DngCreator(Camera2Controller.getInstance().getCameraCharacteristics(),
-                        Camera2Controller.getInstance().getCaptureResult());
+            if(UCameraController.getInstance().getCaptureResult() != null) {
+                DngCreator dngCreator = new DngCreator(UCameraController.getInstance().getCameraCharacteristics(),
+                        UCameraController.getInstance().getCaptureResult());
                 FileOutputStream output = null;
                 SimpleDateFormat sTimeFormat = new SimpleDateFormat("yyyy-MM-dd-hh-mm-ss-SS");
                 String date = sTimeFormat.format(new Date());

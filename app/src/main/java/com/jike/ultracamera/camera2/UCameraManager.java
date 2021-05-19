@@ -7,14 +7,13 @@ import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.MediaRecorder;
-import android.util.Log;
 import android.util.Size;
 import android.util.SizeF;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
-public class UCamera {
+public class UCameraManager {
 
     public static int imageFormat = ImageFormat.JPEG;
     public static CameraManager manager;
@@ -22,19 +21,16 @@ public class UCamera {
 
     private static boolean isFirstOpen = true;
     public static boolean isOpenedFrontCamera = false;
-    public static boolean isOpenedPhysicalCamera = false;
 
-    public static CameraObject[] cameraObjects;
+    public static UCameraObject[] UCameraObjects;
 
-    public static CameraObject getCameraObject() {
-        return cameraObjects[cameraObjectIndex];
+    public static UCameraObject getCameraObject() {
+        return UCameraObjects[curCameraObjectIndex];
     }
 
-    public static int cameraObjectIndex = 0;
+    public static int curCameraObjectIndex = 0;
     public static int frontCameraObjectIndex = 0;
     public static int backCameraObjectIndex = 0;
-
-    public static int physicIndex = 0;
 
     public static class SupportInfo{
         public static boolean isSupportedFrontPhysicalCamera = false;
@@ -55,35 +51,35 @@ public class UCamera {
     }
 
     public static void setIsOpenedFrontCamera(boolean isOpenedFrontCamera) {
-        UCamera.isOpenedFrontCamera = isOpenedFrontCamera;
+        UCameraManager.isOpenedFrontCamera = isOpenedFrontCamera;
         if(isOpenedFrontCamera){
-            cameraObjectIndex = frontCameraObjectIndex;
+            curCameraObjectIndex = frontCameraObjectIndex;
         }else {
-            cameraObjectIndex = backCameraObjectIndex;
+            curCameraObjectIndex = backCameraObjectIndex;
         }
     }
 
     public static void initCamera(CameraManager manager) {
-        UCamera.manager = manager;
+        UCameraManager.manager = manager;
         if(isFirstOpen) {
             try {
                 //获取逻辑摄像头列表
                 String[] logicIds = manager.getCameraIdList();
-                cameraObjects = new CameraObject[logicIds.length];
+                UCameraObjects = new UCameraObject[logicIds.length];
 
                 //第一次打开，获取前后逻辑摄像头的id
                 for (int i = 0; i < logicIds.length; i++) {
                     String camId = logicIds[i];
-                    cameraObjects[i] = new CameraObject();
-                    cameraObjects[i].setLogicId(camId);
+                    UCameraObjects[i] = new UCameraObject();
+                    UCameraObjects[i].setLogicId(camId);
 
                     characteristics = manager.getCameraCharacteristics(camId);
                     if (characteristics.get(CameraCharacteristics.LENS_FACING) == CameraMetadata.LENS_FACING_FRONT) {
                         frontCameraObjectIndex = i;
-                        cameraObjects[i].setFacingFront(true);
+                        UCameraObjects[i].setFacingFront(true);
                     } else if (characteristics.get(CameraCharacteristics.LENS_FACING) == CameraMetadata.LENS_FACING_BACK) {
                         backCameraObjectIndex = i;
-                        cameraObjects[i].setFacingFront(false);
+                        UCameraObjects[i].setFacingFront(false);
                     }
 
                     //物理摄像头读取
@@ -101,13 +97,13 @@ public class UCamera {
                             NumberFormat formatter = new DecimalFormat("0.0");
                             titleList[j] = formatter.format(angleList[j]) + "x";
                         }
-                    cameraObjects[i].setPhysicIds(phyIdList);
-                    cameraObjects[i].setAngleList(angleList);
-                    cameraObjects[i].setTitleList(titleList);
+                    UCameraObjects[i].setPhysicIds(phyIdList);
+                    UCameraObjects[i].setAngleList(angleList);
+                    UCameraObjects[i].setTitleList(titleList);
 
                     if(objects.length > 0) {
-                        cameraObjects[i].setMainPhysicId(phyIdList[0]);
-                        cameraObjects[i].setCurPhysicId(phyIdList[0]);
+                        UCameraObjects[i].setMainPhysicId(phyIdList[0]);
+                        UCameraObjects[i].setCurPhysicId(phyIdList[0]);
                     }
                 }
 
@@ -120,19 +116,19 @@ public class UCamera {
 
     public static void updateCamera(){
         try {
-            CameraObject cameraObject;
+            UCameraObject UCameraObject;
             if (isOpenedFrontCamera) {
                 //设置当前逻辑摄像头ID为前置逻辑摄像头ID
-                cameraObjectIndex = frontCameraObjectIndex;
+                curCameraObjectIndex = frontCameraObjectIndex;
             } else {
                 //设置当前逻辑摄像头ID为后置逻辑摄像头ID
-                cameraObjectIndex = backCameraObjectIndex;
+                curCameraObjectIndex = backCameraObjectIndex;
             }
-            cameraObject = cameraObjects[cameraObjectIndex];
-            characteristics = manager.getCameraCharacteristics(cameraObject.getLogicId());
+            UCameraObject = UCameraObjects[curCameraObjectIndex];
+            characteristics = manager.getCameraCharacteristics(UCameraObject.getLogicId());
 
-            if(cameraObject.isHasPhysicalCamera()){
-                characteristics = manager.getCameraCharacteristics(cameraObject.getCurPhysicId());
+            if(UCameraObject.isHasPhysicalCamera()){
+                characteristics = manager.getCameraCharacteristics(UCameraObject.getCurPhysicId());
             }
 
             initPicSizeList();

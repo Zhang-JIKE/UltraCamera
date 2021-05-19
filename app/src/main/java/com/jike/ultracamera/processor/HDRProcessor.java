@@ -1,7 +1,7 @@
 package com.jike.ultracamera.processor;
 
 import com.jike.ultracamera.algorithm.AlgorithmHDR;
-import com.jike.ultracamera.camera2.UCamera;
+import com.jike.ultracamera.camera2.UCameraManager;
 
 public class HDRProcessor extends BaseProcessor{
 
@@ -12,8 +12,8 @@ public class HDRProcessor extends BaseProcessor{
     @Override
     protected void onFrameAdded(byte[] pixels) {
         AlgorithmHDR.HDRAddYUVFrames(pixels, getFrameCount(),
-                UCamera.getPicSize().getWidth(),
-                UCamera.getPicSize().getHeight());
+                UCameraManager.getPicSize().getWidth(),
+                UCameraManager.getPicSize().getHeight());
     }
 
     @Override
@@ -25,8 +25,8 @@ public class HDRProcessor extends BaseProcessor{
     protected void processAlgorithm() {
         int[] crop = new int[4];
         AlgorithmHDR.HDRProcess(
-                UCamera.getPicSize().getWidth(),
-                UCamera.getPicSize().getHeight(),
+                UCameraManager.getPicSize().getWidth(),
+                UCameraManager.getPicSize().getHeight(),
                 crop, 0, false);
     }
 
