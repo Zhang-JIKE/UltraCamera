@@ -41,7 +41,7 @@ public class ImageSaver {
 
     public void setFusionProcessor(){ processor = new FusionProcessor(1); }
 
-    public void setSimpleProcessor(){ processor = new SimpleProcessor(1);}
+    public void setSimpleProcessor(){ processor = new SimpleProcessor(7);}
 
     public void setHdrProcessor(){
         processor = new HDRProcessor(3);

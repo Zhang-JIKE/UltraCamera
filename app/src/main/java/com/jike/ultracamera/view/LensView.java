@@ -13,7 +13,7 @@ import androidx.annotation.Nullable;
 import com.daily.flexui.util.DisplayUtils;
 import com.daily.flexui.view.abstractview.BaseView;
 import com.jike.ultracamera.R;
-import com.jike.ultracamera.camera2.UCameraManager;
+import com.jike.ultracamera.camera2.UCameraProxy;
 
 public class LensView extends BaseView {
 
@@ -108,7 +108,7 @@ public class LensView extends BaseView {
                 rawRects[i].top = getPaddingTop();
                 rawRects[i].bottom = getPaddingTop() + radius*2;
 
-                if(UCameraManager.getCameraObject().getCurPhysicId().equals(lensIndex[i])){
+                if(UCameraProxy.getCameraObject().getCurPhysicId().equals(lensIndex[i])){
                     selectedIndex = i;
                 }
             }

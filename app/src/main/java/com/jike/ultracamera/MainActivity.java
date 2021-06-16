@@ -16,6 +16,7 @@ import androidx.core.content.ContextCompat;
 
 import com.daily.flexui.BaseActivity;
 import com.daily.flexui.util.AppContextUtils;
+import com.jike.ultracamera.camera2.CameraController;
 import com.jike.ultracamera.cameradata.CamEncode;
 import com.jike.ultracamera.cameradata.CamSetting;
 
@@ -53,7 +54,7 @@ public class MainActivity extends BaseActivity {
         super.onResume();
     }
 
-    @Override
+    /*@Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (KeyEvent.KEYCODE_HEADSETHOOK == keyCode) { //按下了耳机键
             if (event.getRepeatCount() == 0) {  //如果长按的话，getRepeatCount值会一直变大
@@ -63,10 +64,10 @@ public class MainActivity extends BaseActivity {
             }
             MediaPlayer player = MediaPlayer.create(getApplicationContext(), R.raw.camera_click_short);
             player.start();
-            cameraFragment.cameraView.getController().takePicture();
+            CameraController.getInstance().takePicture();
         }
         return super.onKeyDown(keyCode, event);
-    }
+    }*/
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {

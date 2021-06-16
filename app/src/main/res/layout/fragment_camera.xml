@@ -48,12 +48,12 @@
             app:tint="@color/colorWhite"/>
 
         <ImageView
-            android:id="@+id/iv_super_res"
+            android:id="@+id/iv_ratio"
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:padding="1dp"
             android:layout_marginLeft="50dp"
-            android:src="@drawable/ic_super_res_off"
+            android:src="@drawable/ic_aspect_ratio"
             app:layout_constraintLeft_toRightOf="@id/iv_filter"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -66,7 +66,7 @@
             android:padding="2dp"
             android:layout_marginLeft="50dp"
             android:src="@drawable/ic_settings"
-            app:layout_constraintLeft_toRightOf="@id/iv_super_res"
+            app:layout_constraintLeft_toRightOf="@id/iv_ratio"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             app:tint="@color/colorWhite"/>
@@ -104,6 +104,22 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
 
+        <com.jike.ultracamera.view.IndicatorLayout
+            android:id="@+id/indicator_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/black"/>
+
+        <com.jike.ultracamera.view.ResolutionLayout
+            android:id="@+id/resolutionLayout"
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:paddingLeft="20dp"
+            android:paddingRight="20dp"
+            android:background="#51000000"
+            android:translationY="-64dp">
+
+        </com.jike.ultracamera.view.ResolutionLayout>
 
 
     </FrameLayout>

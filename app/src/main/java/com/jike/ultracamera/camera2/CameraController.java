@@ -1,4 +1,3 @@
-
 package com.jike.ultracamera.camera2;
 
 import android.Manifest;
@@ -12,44 +11,94 @@ import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
-import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.OutputConfiguration;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.Message;
 import android.util.Log;
+import android.util.Range;
 import android.view.Surface;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 
 import com.daily.flexui.util.AppContextUtils;
-import com.jike.ultracamera.cameradata.CamMode;
-import com.jike.ultracamera.cameradata.CamPara;
-import com.jike.ultracamera.cameradata.CamSetting;
+import com.jike.ultracamera.camera2.module.BaseModule;
 import com.jike.ultracamera.cameradata.CameraPara;
 import com.jike.ultracamera.helper.CaptureListenerHelper;
 
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
-public final class UCameraController {
+public final class CameraController {
 
-    private static UCameraController UCameraController;
+    private static CameraController CameraController;
 
-    //private Semaphore mCameraOpenCloseLock = new Semaphore(1);
+    private CameraListener cameraListener;
 
-    private UCameraController(){}
+    public void setCameraListener(CameraListener cameraListener) {
+        this.cameraListener = cameraListener;
+    }
 
-    public static UCameraController getInstance(){
-        if(UCameraController == null){
-            UCameraController = new UCameraController();
+    public Handler handler = new Handler(){
+        @Override
+        public void handleMessage(@NonNull Message msg) {
+            if(msg.what == MSG_ON_INIT){
+                if(cameraListener != null){
+                    cameraListener.onInit();
+                }
+            }else if(msg.what == MSG_ON_READ_FINISED){
+                if(cameraListener != null){
+                    cameraListener.onReadFinished();
+                }
+            }else if(msg.what == MSG_ON_START_TO_OPEN){
+                if(cameraListener != null){
+                    cameraListener.onStartToOpen();
+                }
+            }else if(msg.what == MSG_ON_START_TO_PREVIEW){
+                if(cameraListener != null){
+                    cameraListener.onStartPreview();
+                }
+            }else if(msg.what == MSG_ON_OPEN_FINISHED){
+                if(cameraListener != null){
+                    cameraListener.onOpenFinished();
+                }
+            }else if(msg.what == MSG_ON_CLOSED){
+                if(cameraListener != null){
+                    cameraListener.onClosed();
+                }
+            }
         }
-        return UCameraController;
+    };
+
+    private boolean isFirstOpen = true;
+
+    private static final int MSG_ON_INIT = 0x000001;
+    private static final int MSG_ON_READ_FINISED = 0x000002;
+    private static final int MSG_ON_START_TO_OPEN = 0x000003;
+    private static final int MSG_ON_START_TO_PREVIEW = 0x000004;
+    private static final int MSG_ON_OPEN_FINISHED = 0x000005;
+    private static final int MSG_ON_CLOSED = 0x000006;
+
+    public interface CameraListener{
+        void onInit();
+        void onReadFinished();
+        void onStartToOpen();
+        void onStartPreview();
+        void onOpenFinished();
+        void onClosed();
+    }
+
+    private CameraController() {}
+
+    public static CameraController getInstance() {
+        if (CameraController == null) {
+            CameraController = new CameraController();
+        }
+        return CameraController;
     }
 
     private float mScaleTime = 1;
@@ -72,28 +121,37 @@ public final class UCameraController {
     private Handler mBackgroundHandler;
     private HandlerThread mBackgroundThread;
 
-
     public void openCamera() {
         if (ContextCompat.checkSelfPermission(AppContextUtils.getAppActivity(), Manifest.permission.CAMERA)
                 != PackageManager.PERMISSION_GRANTED) {
             return;
         }
 
+        isFirstOpen = true;
+
         try {
             mCameraManager = (CameraManager) AppContextUtils.getAppActivity().
                     getSystemService(Context.CAMERA_SERVICE);
 
-            UCameraManager.initCamera(mCameraManager);
-            UCameraManager.updateCamera();
+            UCameraProxy.initCamera(mCameraManager);
 
-            mCameraCharacteristics = UCameraManager.characteristics;
+            Message msgOnInit = new Message();
+            msgOnInit.what = MSG_ON_INIT;
+            handler.sendMessage(msgOnInit);
 
-            UCameraManager.manager.openCamera(
-                    UCameraManager.UCameraObjects[UCameraManager.curCameraObjectIndex].getLogicId(),
+            UCameraProxy.readCamera();
+
+            Message msgReadFinished = Message.obtain();
+            msgReadFinished.what = MSG_ON_READ_FINISED;
+            handler.sendMessage(msgReadFinished);
+
+            mCameraCharacteristics = UCameraProxy.characteristics;
+
+            UCameraProxy.manager.openCamera(
+                    UCameraProxy.UCameras[UCameraProxy.curCameraObjectIndex].getLogicId(),
                     cameraDeviceStateListener,
                     mBackgroundHandler
             );
-
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }
@@ -118,32 +176,31 @@ public final class UCameraController {
         }
     }
 
-    public void createCameraPreviewSession() {
+    public void startPreview() {
         try {
+            UCameraProxy.readCamera();
 
-            int w = UCameraManager.getPicSize().getWidth();
-            int h = UCameraManager.getPicSize().getHeight();
+            Message msgOnStartToPreview = Message.obtain();
+            msgOnStartToPreview.what = MSG_ON_START_TO_PREVIEW;
+            handler.sendMessage(msgOnStartToPreview);
 
-            Log.e("Preview","w"+w+" h"+h);
+            int w = UCameraProxy.getPicSize().getWidth();
+            int h = UCameraProxy.getPicSize().getHeight();
 
-            if(h/2 >= 1440){
+            /*if(h/2 >= 1440){
                 w/=2;
                 h/=2;
-            }
-
-            Log.e("Preview","w"+w+" h"+h);
+            }*/
 
             texture.setDefaultBufferSize(w, h);
-
             surface = new Surface(texture);
 
-            imageSaver = new ImageSaver(UCameraManager.getPicSize().getWidth(),
-                    UCameraManager.getPicSize().getHeight(),
-                    UCameraManager.imageFormat);
+            imageSaver = new ImageSaver(UCameraProxy.getPicSize().getWidth(),
+                    UCameraProxy.getPicSize().getHeight(),
+                    UCameraProxy.imageFormat);
 
             //单摄解决方案
-            if(!UCameraManager.UCameraObjects[UCameraManager.curCameraObjectIndex].isHasPhysicalCamera()) {
-
+            if(!UCameraProxy.UCameras[UCameraProxy.curCameraObjectIndex].isHasPhysicalCamera()) {
                 mCameraDevice.createCaptureSession(Arrays.asList(surface,
                         imageSaver.getImageReader().getSurface()),
                         captureSessionStateListener,
@@ -153,12 +210,12 @@ public final class UCameraController {
             }else{
                 OutputConfiguration configuration1 = new OutputConfiguration(surface);
                 configuration1.setPhysicalCameraId(
-                        UCameraManager.getCameraObject().getCurPhysicId()
+                        UCameraProxy.getCameraObject().getCurPhysicId()
                 );
 
                 OutputConfiguration configuration2 = new OutputConfiguration(imageSaver.getImageReader().getSurface());
                 configuration2.setPhysicalCameraId(
-                        UCameraManager.getCameraObject().getCurPhysicId()
+                        UCameraProxy.getCameraObject().getCurPhysicId()
                 );
 
                 mCameraDevice.createCaptureSessionByOutputConfigurations(Arrays.asList(configuration1,configuration2),
@@ -175,18 +232,24 @@ public final class UCameraController {
     private final CameraDevice.StateCallback cameraDeviceStateListener = new CameraDevice.StateCallback() {
         @Override
         public void onOpened(@NonNull CameraDevice cameraDevice) {
-            //mCameraOpenCloseLock.release();
             mCameraDevice = cameraDevice;
-            UCameraManager.initPicSizeList();
-            UCameraManager.initVideoSizeList();
-            createCameraPreviewSession();
+
+            Message msgOnStartToOpen = Message.obtain();
+            msgOnStartToOpen.what = MSG_ON_START_TO_OPEN;
+            handler.sendMessage(msgOnStartToOpen);
+
+            startPreview();
         }
 
         @Override
         public void onDisconnected(@NonNull CameraDevice cameraDevice) {
-            //mCameraOpenCloseLock.release();
             cameraDevice.close();
             mCameraDevice = null;
+
+            Message msgOnClosed = Message.obtain();
+            msgOnClosed.what = MSG_ON_CLOSED;
+            handler.sendMessage(msgOnClosed);
+
         }
 
         @Override
@@ -194,6 +257,11 @@ public final class UCameraController {
             //mCameraOpenCloseLock.release();
             cameraDevice.close();
             mCameraDevice = null;
+
+            Message msgOnClosed = Message.obtain();
+            msgOnClosed.what = MSG_ON_CLOSED;
+            handler.sendMessage(msgOnClosed);
+
         }
     };
 
@@ -201,15 +269,20 @@ public final class UCameraController {
         @Override
         public void onConfigured(@NonNull CameraCaptureSession cameraCaptureSession) {
             mCameraCaptureSession = cameraCaptureSession;
+
             try {
+                //cameraCaptureSession.abortCaptures();
+
                 previewBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
                 previewBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
-                previewBuilder.set(CaptureRequest.NOISE_REDUCTION_MODE,CaptureRequest.NOISE_REDUCTION_MODE_HIGH_QUALITY);
+                //previewBuilder.set(CaptureRequest.NOISE_REDUCTION_MODE,CaptureRequest.NOISE_REDUCTION_MODE_HIGH_QUALITY);
                 previewBuilder.set(CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE,CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE_ON);
                 previewBuilder.set(CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE,CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE_ON);
 
                 previewBuilder.addTarget(surface);
+
                 cameraCaptureSession.setRepeatingRequest(previewBuilder.build(), previewCallback, null);
+
             } catch (CameraAccessException e) {
                 e.printStackTrace();
             }
@@ -228,6 +301,15 @@ public final class UCameraController {
                 CameraPara.exposureTime = result.get(CaptureResult.SENSOR_EXPOSURE_TIME);
                 CameraPara.iso = result.get(CaptureResult.SENSOR_SENSITIVITY);
                 CameraPara.isoBoost = result.get(CaptureResult.CONTROL_POST_RAW_SENSITIVITY_BOOST);
+
+                if(isFirstOpen) {
+                    Message msgOnOpenFinished = Message.obtain();
+                    msgOnOpenFinished.what = MSG_ON_OPEN_FINISHED;
+                    handler.sendMessage(msgOnOpenFinished);
+
+                    isFirstOpen = false;
+                }
+
             }catch (NullPointerException e){
                 e.printStackTrace();
             }
@@ -323,10 +405,12 @@ public final class UCameraController {
     public void startBackgroundThread() {
         mBackgroundThread = new HandlerThread("Background");
         mBackgroundThread.start();
+
         mBackgroundHandler = new Handler(mBackgroundThread.getLooper());
     }
 
     public void stopBackgroundThread() {
+        if(mBackgroundHandler == null || mBackgroundThread == null) return;
         mBackgroundThread.quitSafely();
         try {
             mBackgroundThread.join();
@@ -337,7 +421,7 @@ public final class UCameraController {
         }
     }
 
-    public void takePicture() {
+    public void takePicture(BaseModule cameraModule) {
         try {
             if (null == AppContextUtils.getAppActivity() || null == mCameraDevice) {
                 return;
@@ -350,136 +434,14 @@ public final class UCameraController {
             int r = (int)((pixW+pixW/mScaleTime)*0.5);
             int b = (int)((pixH+pixH/mScaleTime)*0.5);
 
-            int indicatorDuration = 0;
+            cameraModule.onPictureTaken(
+                    mCameraDevice,
+                    mCameraCaptureSession,
+                    mCameraCharacteristics,
+                    captureCallback,
+                    surface,
+                    new Rect(l,t,r,b), rotation ,imageSaver);
 
-            switch (CamMode.mode){
-                case NORMAL:
-                    imageSaver.setSimpleProcessor();
-                    List<CaptureRequest> buildersn = new ArrayList<>();
-                    for(int i = 0; i < imageSaver.getProcessor().getFrameCount(); i++){
-                        CaptureRequest.Builder builder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
-                        builder.set(CaptureRequest.SCALER_CROP_REGION,new Rect(l,t,r,b));
-                        builder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
-
-                        if(!CamSetting.isDenoiseOpened) {
-                            builder.set(CaptureRequest.NOISE_REDUCTION_MODE, CaptureRequest.NOISE_REDUCTION_MODE_OFF);
-                        }
-                        builder.set(CaptureRequest.CONTROL_AF_TRIGGER,
-                                CameraMetadata.CONTROL_AF_TRIGGER_START);
-
-                        builder.set(CaptureRequest.CONTROL_AE_PRECAPTURE_TRIGGER,
-                                CameraMetadata.CONTROL_AE_PRECAPTURE_TRIGGER_START);
-                        builder.set(CaptureRequest.JPEG_ORIENTATION, rotation);
-                        builder.addTarget(imageSaver.getImageReader().getSurface());
-                        buildersn.add(builder.build());
-                    }
-                    mCameraCaptureSession.captureBurst(buildersn, captureCallback, null);
-                    break;
-
-                case HDR:
-                    imageSaver.setHdrProcessor();
-                    List<CaptureRequest> buildersHdr = new ArrayList<>();
-                    for (int i = 0; i < imageSaver.getProcessor().getFrameCount(); i++) {
-                        CaptureRequest.Builder builderHdr = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
-
-                        if(i==0){
-                            builderHdr.set(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION, -15);
-                        }else if(i==1){
-                            builderHdr.set(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION, 0);
-                        }else if(i==2) {
-                            builderHdr.set(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION, 15);
-                        }
-                        builderHdr.set(CaptureRequest.JPEG_ORIENTATION, rotation);
-                        builderHdr.addTarget(imageSaver.getImageReader().getSurface());
-                        buildersHdr.add(builderHdr.build());
-                    }
-                    mCameraCaptureSession.captureBurst(buildersHdr, null, null);
-                    break;
-
-                case PIX_FUSION:
-                    imageSaver.setFusionProcessor();
-                    List<CaptureRequest> buildersSuperRes = new ArrayList<>();
-                    try {
-                        for (int i = 0; i < imageSaver.getProcessor().getFrameCount(); i++) {
-                            CaptureRequest.Builder builderSuperRes = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
-                            builderSuperRes.set(CaptureRequest.SCALER_CROP_REGION, new Rect(l, t, r, b));
-
-                            builderSuperRes.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_OFF);
-                            builderSuperRes.set(CaptureRequest.CONTROL_AWB_LOCK, true);
-                            builderSuperRes.set(CaptureRequest.NOISE_REDUCTION_MODE, CaptureRequest.NOISE_REDUCTION_MODE_OFF);
-
-                            builderSuperRes.set(CaptureRequest.CONTROL_POST_RAW_SENSITIVITY_BOOST, 100);
-                            long expTime = (long) (CameraPara.exposureTime * (int) (CameraPara.iso / 50f)*CameraPara.isoBoost/100f);
-
-                            if(CamSetting.isNightOpened) {
-                                expTime = CamPara.timeIncrease(expTime, 2);
-                            }
-
-                            builderSuperRes.set(CaptureRequest.SENSOR_EXPOSURE_TIME, expTime);
-                            builderSuperRes.set(CaptureRequest.SENSOR_SENSITIVITY, 50);
-                            indicatorDuration += expTime / 1000000f;
-
-                            builderSuperRes.addTarget(imageSaver.getImageReader().getSurface());
-                            builderSuperRes.addTarget(new Surface(texture));
-                            builderSuperRes.set(CaptureRequest.JPEG_ORIENTATION, rotation);
-
-                            buildersSuperRes.add(builderSuperRes.build());
-                        }
-                        mCameraCaptureSession.captureBurst(buildersSuperRes, captureCallback, null);
-                    } catch (CameraAccessException e) {
-                        e.printStackTrace();
-                    }
-                    break;
-
-                case NIGHT:
-                    imageSaver.setNightProcessor();
-                    List<CaptureRequest> buildersSuperNight = new ArrayList<>();
-                    for (int i = 0; i < imageSaver.getProcessor().getFrameCount(); i++) {
-                        CaptureRequest.Builder builderSuperNight = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
-                        builderSuperNight.set(CaptureRequest.SCALER_CROP_REGION, new Rect(l, t, r, b));
-
-                        builderSuperNight.addTarget(imageSaver.getImageReader().getSurface());
-                        builderSuperNight.addTarget(new Surface(texture));
-
-                        builderSuperNight.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_OFF);
-                        builderSuperNight.set(CaptureRequest.CONTROL_AWB_LOCK, true);
-
-                        if(!CamSetting.isDenoiseOpened) {
-                            builderSuperNight.set(CaptureRequest.NOISE_REDUCTION_MODE, CaptureRequest.NOISE_REDUCTION_MODE_OFF);
-                        }
-                        builderSuperNight.set(CaptureRequest.CONTROL_POST_RAW_SENSITIVITY_BOOST,  200);
-                        builderSuperNight.set(CaptureRequest.SENSOR_EXPOSURE_TIME, CameraPara.ONE_SECOND_DIV_8);
-                        builderSuperNight.set(CaptureRequest.SENSOR_SENSITIVITY,
-                                (int) ((CameraPara.iso / (CameraPara.ONE_SECOND_DIV_8 / CameraPara.exposureTime)) * CameraPara.isoBoost / 100f) / 2);
-                        indicatorDuration += CameraPara.ONE_SECOND_DIV_8 / 1000000;
-
-                        builderSuperNight.set(CaptureRequest.JPEG_ORIENTATION, rotation);
-
-                        buildersSuperNight.add(builderSuperNight.build());
-                    }
-                    mCameraCaptureSession.captureBurst(buildersSuperNight, captureCallback, null);
-                    break;
-
-                case SUPER_RES:
-                    List<CaptureRequest> captureRequests = new ArrayList<>();
-                    for (int i = 0; i < imageSaver.getProcessor().getFrameCount(); i++) {
-                        CaptureRequest.Builder builder1 =  mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
-                        builder1.set(CaptureRequest.SCALER_CROP_REGION, new Rect(l, t, r, b));
-                        builder1.set(CaptureRequest.NOISE_REDUCTION_MODE, CaptureRequest.NOISE_REDUCTION_MODE_OFF);
-                        builder1.set(CaptureRequest.NOISE_REDUCTION_MODE, CaptureRequest.NOISE_REDUCTION_MODE_OFF);
-                        builder1.set(CaptureRequest.CONTROL_POST_RAW_SENSITIVITY_BOOST, 100);
-                        builder1.set(CaptureRequest.SENSOR_EXPOSURE_TIME, (long) (CameraPara.ONE_SECOND / 4f));
-                        builder1.set(CaptureRequest.SENSOR_SENSITIVITY,
-                                (int) ((int) (CameraPara.iso / (CameraPara.ONE_SECOND / 4.0f / CameraPara.exposureTime)) * CameraPara.isoBoost / 100.0f));
-                        builder1.addTarget(new Surface(texture));
-                        builder1.set(CaptureRequest.JPEG_ORIENTATION, rotation);
-                        builder1.addTarget(imageSaver.getImageReader().getSurface());
-                        captureRequests.add(builder1.build());
-                    }
-                    mCameraCaptureSession.captureBurst(captureRequests, null, null);
-
-                    break;
-            }
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }
@@ -494,7 +456,7 @@ public final class UCameraController {
     }
 
     public static CameraDevice getCameraDevice() {
-        return UCameraController.getInstance().mCameraDevice;
+        return CameraController.getInstance().mCameraDevice;
     }
 
     public CameraCharacteristics getCameraCharacteristics() {

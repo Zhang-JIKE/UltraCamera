@@ -12,7 +12,7 @@ import androidx.annotation.Nullable;
 import com.daily.flexui.activity.SlideActivity;
 import com.daily.flexui.util.AppContextUtils;
 import com.daily.flexui.view.SwitchButton;
-import com.jike.ultracamera.camera2.UCameraManager;
+import com.jike.ultracamera.camera2.UCameraProxy;
 import com.jike.ultracamera.cameradata.CamEncode;
 import com.jike.ultracamera.cameradata.CamSetting;
 import com.jike.ultracamera.dialog.OnSelectItemListener;
@@ -54,8 +54,8 @@ public class SettingsActivity extends SlideActivity {
             @Override
             public void OnSelectItem(int pos) {
                 ;
-                tvPicSize.setText(""+ UCameraManager.Resolution.picSizeList[pos].getWidth()
-                        +"x"+ UCameraManager.Resolution.picSizeList[pos].getHeight());
+                tvPicSize.setText(""+ UCameraProxy.Resolution.picSizeList[pos].getWidth()
+                        +"x"+ UCameraProxy.Resolution.picSizeList[pos].getHeight());
 
             }
         });
@@ -64,8 +64,8 @@ public class SettingsActivity extends SlideActivity {
             @Override
             public void OnSelectItem(int pos) {
                 tvVideoSize.setText(
-                        UCameraManager.Resolution.videoSizeList[pos].getWidth()
-                        +"x"+ UCameraManager.Resolution.videoSizeList[pos].getHeight());
+                        UCameraProxy.Resolution.videoSizeList[pos].getWidth()
+                        +"x"+ UCameraProxy.Resolution.videoSizeList[pos].getHeight());
             }
         });
 
@@ -192,8 +192,8 @@ public class SettingsActivity extends SlideActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        tvPicSize.setText(""+ UCameraManager.getPicSize().getWidth()+"x"+ UCameraManager.getPicSize().getHeight());
-        tvVideoSize.setText(""+ UCameraManager.getVideoSize().getWidth()+"x"+ UCameraManager.getVideoSize().getHeight());
+        tvPicSize.setText(""+ UCameraProxy.getPicSize().getWidth()+"x"+ UCameraProxy.getPicSize().getHeight());
+        tvVideoSize.setText(""+ UCameraProxy.getVideoSize().getWidth()+"x"+ UCameraProxy.getVideoSize().getHeight());
 //        tvVideoRates.setText(""+ CamRates.getFpsRanges().get(CamRates.selectPos).getUpper()+"FPS");
         tvVideoEncode.setText("" +CamEncode.encodes[CamEncode.encodePos]);
 

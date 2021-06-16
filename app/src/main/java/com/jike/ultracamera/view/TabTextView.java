@@ -19,6 +19,7 @@ import androidx.annotation.Nullable;
 import com.daily.flexui.interpolator.uiengine.FlexUiEngine;
 import com.daily.flexui.util.DisplayUtils;
 import com.daily.flexui.view.abstractview.BaseView;
+import com.jike.ultracamera.camera2.module.manager.ModuleManager;
 import com.jike.ultracamera.R;
 
 import java.util.ArrayList;
@@ -26,10 +27,10 @@ import java.util.ArrayList;
 public class TabTextView extends BaseView {
 
     private int baseline;
-    private ArrayList<String> tabText;
-    private ArrayList<Point> points;
-    private ArrayList<Point> oldPoints;
-    private ArrayList<Integer> tabWidths;
+    private ArrayList<String> tabText = new ArrayList<>();
+    private ArrayList<Point> points = new ArrayList<>();
+    private ArrayList<Point> oldPoints = new ArrayList<>();
+    private ArrayList<Integer> tabWidths = new ArrayList<>();
     private float textSize;
 
     private Paint defaultPaint;
@@ -37,7 +38,7 @@ public class TabTextView extends BaseView {
 
     private Paint hintPaint;
 
-    public static int nowIndex = 1;
+    public static int nowIndex = 0;
 
     private ValueAnimator animator;
 
@@ -70,8 +71,6 @@ public class TabTextView extends BaseView {
         TypedArray array = getContext().getTheme().obtainStyledAttributes(attrs, com.daily.flexui.R.styleable.FIconView, 0, 0);
         textSize = array.getDimension(com.daily.flexui.R.styleable.GradientTextView_gradienttextview_textsize, DisplayUtils.sp2px(14.5f));
 
-        initData();
-
         defaultPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         defaultPaint.setColor(Color.WHITE);
         defaultPaint.setTextSize(textSize);
@@ -83,29 +82,27 @@ public class TabTextView extends BaseView {
         hintPaint.setColor(getResources().getColor(R.color.colorAccent));
         hintPaint.setStyle(Paint.Style.FILL);
 
-        for (int i = 0; i < tabText.size(); i++){
-            int wid = (int) defaultPaint.measureText(tabText.get(i));
-            tabWidths.add(wid);
-            widSum += wid;
-        }
-        widSum += (tabText.size()+1) * hMargin;
 
         animator = ValueAnimator.ofFloat();
     }
 
-    public void initData(){
-        tabText = new ArrayList<>();
-        points = new ArrayList<>();
-        tabWidths = new ArrayList<>();
-        oldPoints = new ArrayList<>();
+    public void setData(ModuleManager manager){
+        for(int i = 0; i < manager.modules.size(); i++){
+            if(manager.modules.get(i).getModuleName().equals("拍照")){
+                nowIndex = i;
+            }
+            tabText.add(manager.modules.get(i).getModuleName());
+            points.add(new Point());
+        }
 
-        tabText.add("夜景");
-        tabText.add("拍照");
-        tabText.add("融合");
+        for (int i = 0; i < tabText.size(); i++) {
+            int wid = (int) defaultPaint.measureText(tabText.get(i));
+            tabWidths.add(wid);
+            widSum += wid;
+        }
+        widSum += (tabText.size() + 1) * hMargin;
 
-        points.add(new Point());
-        points.add(new Point());
-        points.add(new Point());
+        requestLayout();
     }
 
     @Override
@@ -124,18 +121,20 @@ public class TabTextView extends BaseView {
         Rect rect = new Rect(0,0,width,height);
         baseline = rect.top + (rect.bottom - rect.top - fontMetrics.bottom + fontMetrics.top) / 2 - fontMetrics.top;
 
-        points.get(nowIndex).set(width/2 - tabWidths.get(nowIndex)/2,baseline);
+        if(points != null && points.size() != 0) {
+            points.get(nowIndex).set(width / 2 - tabWidths.get(nowIndex) / 2, baseline);
 
-        for(int i = nowIndex - 1; i >= 0; i--){
-            points.get(i).set(points.get(i+1).x - (tabWidths.get(i+1)) - hMargin, baseline);
+            for (int i = nowIndex - 1; i >= 0; i--) {
+                points.get(i).set(points.get(i + 1).x - (tabWidths.get(i + 1)) - hMargin, baseline);
+            }
+
+            for (int j = nowIndex + 1; j < tabText.size(); j++) {
+                points.get(j).set(points.get(j - 1).x + (tabWidths.get(j - 1)) + hMargin, baseline);
+            }
+
+            oldPoints = new ArrayList<>();
+            oldPoints.addAll(points);
         }
-
-        for(int j = nowIndex + 1; j < tabText.size(); j++){
-            points.get(j).set(points.get(j-1).x + (tabWidths.get(j-1)) + hMargin, baseline);
-        }
-
-        oldPoints = new ArrayList<>();
-        oldPoints.addAll(points);
     }
 
     @Override
@@ -187,6 +186,8 @@ public class TabTextView extends BaseView {
     }
 
     private int getNearestIndex(){
+        if(points == null || points.size() == 0) return 0;
+
         int num = Math.abs(points.get(0).x + tabWidths.get(0) / 2 - width / 2);
         int miniIdx = 0;
         for (int i = 1; i < points.size(); i++) {
@@ -200,6 +201,8 @@ public class TabTextView extends BaseView {
     }
 
     private int getFingerIndex(int x){
+        if(points == null || points.size() == 0) return 0;
+
         int num = Math.abs(points.get(0).x + tabWidths.get(0) / 2 - x);
         int miniIdx = 0;
         for (int i = 1; i < points.size(); i++) {
@@ -213,7 +216,17 @@ public class TabTextView extends BaseView {
     }
 
     public void animToIndex(final int idx){
+        if(points == null || points.size() == 0) return;
         performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK);
+
+        if(tabListener != null){
+            if(nowIndex != idx) {
+                nowIndex = idx;
+                tabListener.onTabSelected(idx);
+            }
+        }
+        nowIndex = idx;
+
         if(animator != null && animator.isRunning()){
             animator.cancel();
         }else {
@@ -235,11 +248,6 @@ public class TabTextView extends BaseView {
                 public void onAnimationEnd(Animator animation) {
                     oldPoints = new ArrayList<>();
                     oldPoints.addAll(points);
-                    nowIndex = idx;
-
-                    if(tabListener != null){
-                        tabListener.onTabSelected(idx);
-                    }
                 }
 
                 @Override
@@ -262,14 +270,19 @@ public class TabTextView extends BaseView {
     }
 
     public void animToNext(){
-        nowIndex++;
-        if(nowIndex > tabText.size() - 1) nowIndex = tabText.size() - 1;
-        animToIndex(nowIndex);
+        int i = nowIndex + 1;
+        if(i > tabText.size() - 1) {
+            i = tabText.size() - 1;
+        }
+        animToIndex(i);
     }
 
     public void animToPrior(){
-        nowIndex--;
-        if(nowIndex < 0) nowIndex = 0;
-        animToIndex(nowIndex);
+        int i = nowIndex - 1;
+        if(i < 0) {
+            i = 0;
+        }
+        animToIndex(i);
+
     }
 }

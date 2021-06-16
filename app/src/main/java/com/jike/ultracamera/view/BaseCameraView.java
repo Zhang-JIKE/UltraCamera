@@ -9,7 +9,7 @@ import android.view.Surface;
 import android.view.TextureView;
 
 import com.daily.flexui.util.AppContextUtils;
-import com.jike.ultracamera.camera2.UCameraManager;
+import com.jike.ultracamera.camera2.UCameraProxy;
 import com.jike.ultracamera.interfaces.OnImageDetectedListener;
 
 
@@ -64,7 +64,7 @@ public class BaseCameraView extends TextureView {
         Matrix matrix = new Matrix();
         RectF viewRect = new RectF(0, 0, viewWidth, viewHeight);
         RectF bufferRect;
-        bufferRect = new RectF(0, 0, UCameraManager.getPicSize().getHeight(), UCameraManager.getPicSize().getWidth());
+        bufferRect = new RectF(0, 0, UCameraProxy.getPicSize().getHeight(), UCameraProxy.getPicSize().getWidth());
 
         float centerX = viewRect.centerX();
         float centerY = viewRect.centerY();
@@ -76,8 +76,8 @@ public class BaseCameraView extends TextureView {
             float viewLongEdge = viewWidth > viewHeight ? viewWidth : viewHeight;
             float viewShortEdge = viewWidth <= viewHeight ? viewWidth : viewHeight;
             float scale = Math.max(
-                    (float) viewShortEdge / UCameraManager.getPicSize().getHeight(),
-                    (float) viewLongEdge / UCameraManager.getPicSize().getWidth());
+                    (float) viewShortEdge / UCameraProxy.getPicSize().getHeight(),
+                    (float) viewLongEdge / UCameraProxy.getPicSize().getWidth());
             matrix.postScale(scale, scale, centerX, centerY);
 
             matrix.postRotate(90 * (rotation - 2), centerX, centerY);
